@@ -1,0 +1,38 @@
+# GitHub labels for filtering and reporting.
+# Create manually (Settings → Labels) or use a label-sync action (e.g. EndBug/label-sync).
+# See docs/boards/feature-issue-mapping.md for phase labels and script usage.
+
+labels:
+  - name: feature
+    color: EDEDED
+    description: Product feature (intake, BR, or implementation)
+  - name: epic
+    color: 5319E7
+    description: Large initiative spanning multiple features or phases
+  - name: phase-1
+    color: 0E8A16
+    description: Data and graph foundation
+  - name: phase-2
+    color: 1D76DB
+    description: PDP + Delivery API
+  - name: phase-3
+    color: FBCA04
+    description: Cart + email + analytics
+  - name: phase-4
+    color: FEF2C0
+    description: Clienteling + merchandising UI
+  - name: phase-5
+    color: D93F0B
+    description: Optimization + look builder
+  - name: br-done
+    color: C2E0C6
+    description: Business requirements approved; ready for feature breakdown
+  - name: in-development
+    color: FBCA04
+    description: In active development (build or QA)
+  - name: bug
+    color: D73A4A
+    description: Something isn't working
+  - name: documentation
+    color: 0075CA
+    description: Documentation, specs, or runbooks

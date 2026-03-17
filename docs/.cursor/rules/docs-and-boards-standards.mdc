@@ -1,0 +1,32 @@
+---
+description: Author docs and boards consistently; enforce structure, terminology, and missing-decision handling
+globs: "{docs/**/*.md,boards/**/*.md}"
+alwaysApply: false
+---
+
+# Docs And Boards Standards
+
+Apply when creating or editing files under `docs/` or `boards/`.
+
+## Content
+- Prefer **implementation-oriented** content over generic explanation. Artifacts should enable the next stage to act without guessing.
+- For stage artifacts, make **dependencies**, **readiness criteria**, and **exit criteria** explicit.
+- **Missing decisions:** When information is unknown or unresolved, record it as a **missing decision** (e.g. "Missing decision: PDP-only vs PDP+cart scope"). Do not invent answers, omit the topic, or leave ambiguity implicit. List missing decisions in a dedicated section or Notes so humans or downstream runs can resolve them.
+
+## Terminology
+- Use project terms consistently. Required terms: `look`, `outfit`, `style profile`, `recommendation`, `merchandising rule`, `RTW`, `CM`. See `docs/project/glossary.md` for definitions.
+- Use **lifecycle states** exactly as defined: `TODO`, `IN_PROGRESS`, `NEEDS_REVIEW`, `IN_REVIEW`, `CHANGES_REQUESTED`, `READY_FOR_HUMAN_APPROVAL`, `APPROVED`, `DONE`. Do not abbreviate or substitute.
+
+## Board structure
+- Every board row must include the columns defined in that board’s **Item Structure** table. Typical columns: **ID**, **Title/Feature**, **Status**, **Owner**, **Reviewer**, **Approval Mode**, **Trigger Source** (when relevant), **Inputs**, **Output** (or exit criteria), **Exit Criteria**, **Notes**, **Promotes To**.
+- **Approval Mode** must be one of: `HUMAN_REQUIRED`, `AUTO_APPROVE_ALLOWED`. Set explicitly; do not leave blank when the board schema requires it.
+- **Notes:** Use for milestone gates, rework links (e.g. "Upstream BR-001 must be revised per rejection comments"), dependency notes, and trigger or context that affects interpretation.
+- For hybrid workflow, include **trigger source** when it affects interpretation or authority (e.g. issue automation, direct run, schedule).
+
+## Document structure
+- Follow **naming standards** from `docs/project/standards.md`: lowercase with hyphens for files; stage-oriented names for prompts; clear identifiers for board items (e.g. BR-001, UI-003).
+- Each source-of-truth document should state **purpose** and **practical usage**. Prefer tables and structured lists for operational content. Separate assumptions from approved decisions in requirements and architecture.
+
+## References
+- Board schema and lifecycle: `docs/project/agent-operating-model.md`, each `boards/*.md` header and Item Structure table.
+- Naming and document standards: `docs/project/standards.md`.
