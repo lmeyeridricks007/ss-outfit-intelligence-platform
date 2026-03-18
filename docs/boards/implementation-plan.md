@@ -43,4 +43,4 @@ Track implementation plan items that sequence execution across UI, backend, and 
 
 | Plan ID | Title | Status | Approval Mode | Owner | Reviewer | Trigger Source | Upstream | Output | Exit Criteria | Notes |
 |---------|-------|--------|----------------|-------|----------|----------------|----------|--------|---------------|-------|
-| *(none yet)* | — | — | — | — | — | — | — | — | — | Add rows when architecture is promoted or plan work is created. |
+| IP-001 | F1 catalog and inventory ingestion implementation plan | TODO | HUMAN_REQUIRED | Planning Agent | Review Agent | Architecture promotion | TA-006 | Plan artifact TBD; create from `docs/project/architecture/f1-catalog-inventory-ingestion.md` | Split connector, canonical-store, events, read-API, and operations work into executable tracks with explicit dependencies and downstream board fan-out | Backend and integration tracks are expected first; incorporate non-blocking F1 assumptions on source ownership and storage technology |
