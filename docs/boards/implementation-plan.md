@@ -43,4 +43,4 @@ Track implementation plan items that sequence execution across UI, backend, and 
 
 | Plan ID | Title | Status | Approval Mode | Owner | Reviewer | Trigger Source | Upstream | Output | Exit Criteria | Notes |
 |---------|-------|--------|----------------|-------|----------|----------------|----------|--------|---------------|-------|
-| *(none yet)* | — | — | — | — | — | — | — | — | — | Add rows when architecture is promoted or plan work is created. |
+| IP-001 | F1 catalog and inventory ingestion implementation plan | TODO | HUMAN_REQUIRED | Planning Agent | Review Agent | Architecture promotion | TA-006 | Implementation plan artifact to be created from `docs/project/catalog-and-inventory-ingestion-technical-architecture.md` | Plan defines backend, integration, and QA workstreams; contracts; rollout sequencing; and readiness gates | Seeded from TA-006 for issue #27; expected downstream boards: backend-build, integration-build, e2e-qa |
