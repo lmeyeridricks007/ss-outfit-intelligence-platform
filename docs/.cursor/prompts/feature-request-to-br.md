@@ -42,6 +42,9 @@ Tie the request to all that apply: recommendation type (outfit, cross-sell, upse
 ## Board Instruction
 Update `boards/business-requirements.md`: add or update row with status (TODO or IN_PROGRESS), owner, reviewer, Approval Mode, link to issue/source. If approval mode is unknown, set HUMAN_REQUIRED and add "Approval mode for BR stage TBD" to Notes.
 
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: produce the BR artifact, update the board row, then **commit and push** the branch (e.g. `br/issue-<number>-<slug>`). Do not stop for human approval or "Mark as ready." Allow PR creation. Use non-blocking statuses so the run completes (e.g. IN_PROGRESS or NEEDS_REVIEW as appropriate).
+
 ## Example (snippet)
 **Problem statement:** Merchandisers need to control which products appear in PDP "Complete the look" for RTW so that looks align with campaign and inventory. Today, recommendations are fully system-driven and cannot be constrained by rule.
 

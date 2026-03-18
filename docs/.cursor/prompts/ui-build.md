@@ -55,3 +55,6 @@ Create a UI delivery artifact for recommendation surfaces or admin tooling so th
 
 **Board update:** Add/update row in `boards/ui-build.md`, status, Approval Mode, link to implementation plan item.
 ```
+
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: produce the UI deliverable, update `boards/ui-build.md`, then **commit and push** the branch (e.g. `ui/issue-<number>-<slug>`). Do not stop for human approval or "Mark as ready." Allow PR creation.

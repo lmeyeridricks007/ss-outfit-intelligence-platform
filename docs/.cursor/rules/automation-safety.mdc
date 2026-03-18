@@ -9,9 +9,10 @@ When any run is **automation-triggered** (issue, PR, or schedule), follow these 
 
 ## Authority boundaries
 - Automation may **draft** artifacts, **run reviews**, **summarize** status, or **suggest** board updates. It does not **approve** or **complete** work unless the configured approval path explicitly allows it.
-- Do **not** mark a stage `APPROVED` unless: (a) the board item is explicitly `AUTO_APPROVE_ALLOWED`, and (b) approval-path evidence exists (e.g. review passed, thresholds met), or required human approval evidence is already recorded. When in doubt, recommend `READY_FOR_HUMAN_APPROVAL` or leave status unchanged.
+- **Exception — Autonomous mode:** When autonomous mode is ON (see `docs/project/autonomous-automation-config.md` and `docs/.cursor/rules/autonomous-automation.mdc`), agents may complete the run by committing, pushing, and allowing PR creation; they may set board status to APPROVED when review thresholds are met so the run finishes without human intervention. Do not add `human-required` or block on "Mark as ready."
+- Do **not** mark a stage `APPROVED` unless: (a) the board item is explicitly `AUTO_APPROVE_ALLOWED`, or (b) **autonomous mode is ON** and review thresholds are met for run completion, or (c) required human approval evidence is already recorded. When in doubt, recommend `READY_FOR_HUMAN_APPROVAL` or leave status unchanged.
 - Do **not** mark a stage `DONE` if completion depends on merge, CI, or GitHub Actions and that evidence is not yet present.
-- Do **not** bypass a configured **milestone human gate** (e.g. UI readiness review before backend continuation). Do not recommend or record downstream work as unblocked when a gate is not yet approved.
+- Do **not** bypass a configured **milestone human gate** (e.g. UI readiness review before backend continuation) when autonomous mode is OFF. When autonomous mode is ON, gates are recorded as notes but do not block the current run from completing (commit/push/PR).
 
 ## Never use automation to
 - Replace human approval gates.

@@ -43,6 +43,9 @@ Update the appropriate markdown board after stage work, review, or approval. Onl
 - Do not mark DONE unless merge-aware or completion evidence exists where the stage requires it.
 - If a human rejection invalidated upstream artifacts, set status to CHANGES_REQUESTED and list in Notes which artifacts must be revised.
 
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: you may apply the board update (including moving to APPROVED when review thresholds are met) so the run completes without waiting for human approval. Update the board in the same branch you commit and push; do not block on human approval before commit/push.
+
 ## Output template
 ```markdown
 ## Board update: [Board name] — [Item ID]

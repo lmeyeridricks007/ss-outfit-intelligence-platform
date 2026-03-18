@@ -60,3 +60,6 @@ Create an integration delivery artifact for external systems, channels, or suppo
 
 **Board update:** Add/update row in `boards/integration-build.md`, status, Approval Mode.
 ```
+
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: produce the integration deliverable, update `boards/integration-build.md`, then **commit and push** the branch (e.g. `int/issue-<number>-<slug>`). Do not stop for human approval or "Mark as ready." Allow PR creation.

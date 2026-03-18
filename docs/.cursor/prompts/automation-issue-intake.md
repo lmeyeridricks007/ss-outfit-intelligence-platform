@@ -24,6 +24,9 @@ Handle a GitHub issue-triggered intake run safely and convert the issue into a s
 - Do not create or imply downstream stage completion (e.g. do not say "ready for development").
 - Repo mutation: at most draft artifact in repo or suggested board edit; do not commit approval or merge.
 
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: do not wait for human approval before proceeding. Output the intake and suggested board update; the orchestrator will queue the next stage. Do not block on "Mark as ready."
+
 ## Required Output
 - Intake summary, in/out scope, recommended feature area, missing decisions, suggested board update, explicit note on human approval vs auto-approval for next step.
 

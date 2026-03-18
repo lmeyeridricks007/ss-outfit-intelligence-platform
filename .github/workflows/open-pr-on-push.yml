@@ -1,0 +1,67 @@
+# When a branch in a stage branch family is pushed, open a PR if one doesn't exist.
+# Branch families: br/, feat/, arch/, impl/, ui/, be/, int/, qa/
+name: Open PR on stage branch push
+on:
+  push:
+    branches:
+      - 'br/**'
+      - 'feat/**'
+      - 'arch/**'
+      - 'impl/**'
+      - 'ui/**'
+      - 'be/**'
+      - 'int/**'
+      - 'qa/**'
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for existing PR
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ref = context.ref.replace('refs/heads/', '');
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${ref}`,
+            });
+            const pr = prs[0];
+            if (pr) {
+              core.setOutput('pr_url', pr.html_url);
+              core.setOutput('exists', 'true');
+              return;
+            }
+            const issueNum = ref.split('/')[1]?.split('-')[0] || '';
+            const title = ref.split('/').slice(1).join('/').replace(/^[\d-]+-?/, '') || ref;
+            const { data: newPr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title || `Stage branch: ${ref}`,
+              head: ref,
+              base: context.payload.repository.default_branch || 'main',
+              body: `Automated PR from stage branch \`${ref}\`. Fixes #${issueNum || '?'}.`,
+            });
+            core.setOutput('pr_url', newPr.html_url);
+            core.setOutput('exists', 'false');
+      - name: Comment PR URL on issue (if new PR)
+        if: steps.check.outputs.exists == 'false'
+        env:
+          PR_URL: ${{ steps.check.outputs.pr_url }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ref = context.ref.replace('refs/heads/', '');
+            const parts = ref.split('/')[1]?.split('-') || [];
+            const issueNum = parts[0];
+            if (!issueNum) return;
+            const prUrl = process.env.PR_URL || '';
+            if (!prUrl) return;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt(issueNum, 10),
+              body: `PR opened: ${prUrl}`,
+            });

@@ -41,6 +41,9 @@ Decompose approved business requirements into major features, sub-features, depe
 ## Board Instruction
 Update `boards/features.md`: add one row per major feature (or per logical work item per project convention), link to originating BR item, set Approval Mode and milestone-gate notes from BR.
 
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: produce the feature breakdown, update `boards/features.md`, then **commit and push** the branch (e.g. `feat/issue-<number>-<slug>`). Do not stop for human approval or "Mark as ready." Allow PR creation.
+
 ## Output template
 ```markdown
 ## Feature breakdown: [BR title]

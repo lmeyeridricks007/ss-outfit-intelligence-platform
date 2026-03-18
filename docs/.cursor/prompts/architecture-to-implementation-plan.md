@@ -42,6 +42,9 @@ Turn approved architecture into a sequenced execution plan with UI, backend, int
 ## Board Instruction
 Update `boards/implementation-plan.md`. Create or open downstream work items (e.g. ui-build, backend-build) only when approval conditions and gates allow; carry approval mode and milestone-gate notes into those boards.
 
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: produce the implementation plan, update `boards/implementation-plan.md`, then **commit and push** the branch (e.g. `impl/issue-<number>-<slug>`). Do not stop for human approval or "Mark as ready." Allow PR creation.
+
 ## Output template
 ```markdown
 ## Implementation plan: [Scope name]

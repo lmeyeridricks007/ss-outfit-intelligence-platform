@@ -44,6 +44,9 @@ Produce an implementation-oriented technical architecture artifact from an appro
 ## Board Instruction
 Update `boards/technical-architecture.md` with architecture readiness, blockers (e.g. "Awaiting API contract sign-off"), and approval mode.
 
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: produce the architecture artifact, update `boards/technical-architecture.md`, then **commit and push** the branch (e.g. `arch/issue-<number>-<slug>`). Do not stop for human approval or "Mark as ready." Allow PR creation.
+
 ## Output template
 ```markdown
 ## Technical architecture: [Feature set name]

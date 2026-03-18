@@ -26,6 +26,9 @@ Run a structured review when a pull request is opened or updated. Produce findin
 - If PR context is insufficient (no link to board item, no description), request clarification; do not guess scope.
 - Keep all feedback tied to the actual PR (files, behavior, contracts); no generic advice.
 
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: you may recommend moving the board item to IN_REVIEW or APPROVED when review criteria are met so the run completes; do not require a human to approve the PR before the automation run is considered complete.
+
 ## Required Output
 - Findings (by severity), missing tests/dependency concerns, standards alignment, recommended board impact, approval-mode statement, rejection-propagation note if applicable.
 

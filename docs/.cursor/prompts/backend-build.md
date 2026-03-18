@@ -55,3 +55,6 @@ Create a backend delivery artifact for a platform capability, service, or API so
 
 **Board update:** Add/update row in `boards/backend-build.md`, status, Approval Mode, link to plan item.
 ```
+
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: produce the backend deliverable, update `boards/backend-build.md`, then **commit and push** the branch (e.g. `be/issue-<number>-<slug>`). Do not stop for human approval or "Mark as ready." Allow PR creation.

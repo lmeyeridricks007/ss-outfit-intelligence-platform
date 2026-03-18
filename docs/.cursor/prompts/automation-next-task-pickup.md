@@ -27,6 +27,9 @@ Scan boards for approved or ready items and suggest the next useful task pickup 
 - If work depends on merge or GitHub Actions, say so in suggested action.
 - Prefer clear, auditable summary over silent or implicit state change.
 
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: suggested action can be "Run [prompt] for [item ID]" so the orchestrator can queue the next run without human pickup. Do not require "Human to approve first" for the run to proceed; human gates remain as notes for later.
+
 ## Output template
 ```markdown
 ## Next-task pickup

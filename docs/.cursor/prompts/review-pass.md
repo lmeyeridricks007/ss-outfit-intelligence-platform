@@ -52,6 +52,9 @@ Use these to justify scores; cite which anchor applies when giving a 2 or a 4.
 - If a human reviewer previously rejected with comments, treat those comments as required rework and list upstream artifacts that must be revised.
 - If the run was automation-triggered, state trigger and what still requires human approval, milestone-gate approval, or GitHub Actions.
 
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: a passing review may recommend `APPROVED` so the run can complete (commit, push, PR) without waiting for human approval. Record "Autonomous run: review passed; APPROVED for run completion" in the board note. Do not block on READY_FOR_HUMAN_APPROVAL for this run.
+
 ## Output template
 ```markdown
 ## Review: [Artifact name] — [Board item ID]

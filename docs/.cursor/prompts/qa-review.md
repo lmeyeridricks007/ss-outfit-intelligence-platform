@@ -61,3 +61,6 @@ Create a test and release-readiness artifact for a feature that has approved UI,
 
 **Board update:** Add/update row in `boards/e2e-qa.md`, status, link to approved build items.
 ```
+
+## Autonomous mode (see `docs/project/autonomous-automation-config.md`)
+- When autonomous mode is ON: produce the QA review artifact, update `boards/e2e-qa.md`, then **commit and push** the branch (e.g. `qa/issue-<number>-<slug>`). Do not stop for human approval or "Mark as ready." Allow PR creation. Go/no-go can be recorded as a recommendation; do not block the run on human release approval.
