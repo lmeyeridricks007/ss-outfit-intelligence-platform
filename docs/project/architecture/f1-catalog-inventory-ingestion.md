@@ -162,6 +162,20 @@ This design lets recommendation and delivery layers apply inventory-aware filter
 | **Inventory projection store** | Fast-changing stock and availability state | Low-latency inventory reads and inventory event emission |
 | **Catalog search or read projection** | Query-optimized projection for downstream readers | Efficient fan-out without exposing write storage shape |
 
+### 5.4 Canonical contract summary
+
+The implementation plan should preserve the following logical contracts even if storage technology changes. These shapes make the F1 boundary explicit for F5, F6, F9, and F11.
+
+| Contract | Required identifiers | Minimum required fields | Primary consumers |
+|----------|----------------------|-------------------------|-------------------|
+| **Product aggregate** | `product_id` | status, category, taxonomy path, fabric, fit, color, pattern, season, occasion, style family, RTW/CM applicability, `updated_at`, `source_refs`, `quality_flags` | F5, F6, F9, F11 |
+| **Variant summary** | `variant_id`, `product_id` | source SKU refs, size or option attributes, publish status, price-display fields when approved for inclusion, `updated_at` | F9, F11 |
+| **Inventory availability** | `variant_id`, `product_id`, `location_id` or regional scope | `available_to_sell`, `reserved_quantity`, `channel`, `region`, `last_inventory_at`, freshness status | F9, F11 |
+| **Asset summary** | `product_id`, asset source key | asset version, asset type, URL or reference, sort order, swatch flag, `updated_at` | F6, F11 |
+| **Source mapping record** | source system name, source object ID | mapped canonical ID, source revision, `last_seen_at`, mapping status | F1 operators and replay tooling |
+
+This contract summary complements the entity rules in `docs/project/domain-model.md` and the identifier and event rules in `docs/project/data-standards.md`. Downstream consumers should not read raw source payloads or infer missing canonical identifiers from source-specific keys.
+
 ---
 
 ## 6. End-to-end data flow
@@ -242,6 +256,8 @@ F1 is primarily event-driven, but downstream services still need read access to 
 - Responses do not expose source credentials or raw payloads.
 - Read APIs return the latest canonical state plus freshness metadata so downstream services can make graceful fallback decisions.
 - Search and replay endpoints are operational interfaces and should be rate-limited more aggressively than read endpoints.
+- Version `v1` contracts should evolve additively; breaking field removals or semantic changes require a new internal version and downstream migration plan.
+- Retired or stale records should remain queryable to authorized internal consumers when cleanup, replay, or look-validation workflows need historical context.
 
 ---
 
