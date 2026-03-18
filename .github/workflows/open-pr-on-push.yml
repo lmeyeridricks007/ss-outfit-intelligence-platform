@@ -12,6 +12,10 @@ on:
       - 'be/**'
       - 'int/**'
       - 'qa/**'
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
 jobs:
   open-pr:
     runs-on: ubuntu-latest
