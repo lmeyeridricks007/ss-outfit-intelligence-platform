@@ -43,4 +43,4 @@ Track implementation plan items that sequence execution across UI, backend, and 
 
 | Plan ID | Title | Status | Approval Mode | Owner | Reviewer | Trigger Source | Upstream | Output | Exit Criteria | Notes |
 |---------|-------|--------|----------------|-------|----------|----------------|----------|--------|---------------|-------|
-| *(none yet)* | — | — | — | — | — | — | — | — | — | Add rows when architecture is promoted or plan work is created. |
+| IP-001 | Catalog and inventory ingestion implementation plan | TODO | HUMAN_REQUIRED | Implementation Planning Agent | Review Agent | Architecture promotion | TA-006 | Plan artifact pending creation from `docs/architecture/catalog-and-inventory-ingestion-technical-architecture.md` | Convert TA-006 into sequenced work packages, dependency map, contracts, and downstream build-board fan-out | Created from autonomous architecture run for Issue #27; implementation planning must resolve TA-006 §9 decisions before build fan-out |
