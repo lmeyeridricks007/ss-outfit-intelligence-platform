@@ -104,7 +104,7 @@ PIM | Shopify | OMS | DAM | Custom Made
 | **Quarantine and replay manager** | Hold invalid or conflicting records, provide retry and replay paths after mapping or source fixes | Validation failures, conflict failures | Replay requests, operator diagnostics, alert events | Operational recovery boundary |
 | **Change publication layer** | Emit downstream product/inventory changes after canonical writes; decouple ingestion from graph/recommendation implementations | Canonical write events or CDC | Versioned product and inventory change events, cache invalidation signals | Integration boundary to F5/F6/F9/F11/F17 |
 | **Observability and SLA monitor** | Track run health, freshness, source latency, failure rates, and downstream publish lag | Run metadata, adapter metrics, validation metrics, publish metrics | Dashboards, alerts, SLA breach notifications | Operational monitoring boundary |
-| **Attach-logic input projection** | Project attach-relevant attributes and relationship hints to downstream rules/graph components without making ingestion the owner of attach policy | Canonical products, source relationship hints, availability state | Normalized attributes usable by F5/F6/F10 | Supporting projection only; not the system of record for attach logic |
+| **Attach and constraint projection** | Project attach-relevant attributes, source relationship hints, and governance-ready product context to downstream rules/graph components without making ingestion the owner of attach policy or merchandising constraints | Canonical products, source relationship hints, availability state, governance scope inputs | Normalized attributes and scoped policy context usable by F5/F6/F10 | Supporting projection only; not the system of record for attach logic or merchandising constraints |
 
 ### Source precedence model
 
@@ -406,7 +406,19 @@ Downstream graph/rules services consume a stable projection that includes:
 - RTW/CM applicability,
 - channel and region availability,
 - retirement/discontinuation status,
-- source lineage and freshness timestamps.
+- source lineage and freshness timestamps,
+- policy-scope join keys (channel, market, collection, lifecycle status),
+- optional source relationship hints that can seed centrally managed attach logic.
+
+Where policy systems publish their own rule data, the ingestion-side projection should expose a **join-stable contract** rather than duplicate policy state. The minimum contract for the downstream join surface is:
+
+- `product_id`
+- `canonical_version`
+- `availability_scope[]`
+- `compatibility_attributes`
+- `policy_scope`
+- `freshness_timestamp`
+- `source_lineage`
 
 This supports centralized rule definition without turning ingestion into a rules engine.
 
