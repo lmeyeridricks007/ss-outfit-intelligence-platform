@@ -1,13 +1,13 @@
 # Technical Architecture: Catalog and Inventory Ingestion
 
-**TA ID:** TA-006  
-**Feature:** FEAT-001 / F1 — Catalog and inventory ingestion  
-**Upstream artifact:** `docs/features/catalog-and-inventory-ingestion.md`  
-**Source:** `docs/project/architecture-overview.md`, `docs/project/domain-model.md`, `docs/project/data-standards.md`, `docs/project/integration-standards.md`, `docs/project/business-requirements.md`, `docs/project/roadmap.md`  
-**Traceability:** Downstream of approved feature breakdown; feeds `docs/boards/implementation-plan.md`, F5 product graph, F6 outfit graph and look store, and later F10/F11 inventory-aware recommendation paths.  
-**Status:** Drafted for architecture-stage review.  
-**Review:** Architecture-stage artifact; assess per `docs/.cursor/prompts/review-pass.md` and the project review rules.  
-**Approval mode:** HUMAN_REQUIRED  
+**TA ID:** TA-006
+**Feature:** FEAT-001 / F1 — Catalog and inventory ingestion
+**Upstream artifact:** `docs/features/catalog-and-inventory-ingestion.md`
+**Source:** `docs/project/architecture-overview.md`, `docs/project/domain-model.md`, `docs/project/data-standards.md`, `docs/project/integration-standards.md`, `docs/project/business-requirements.md`, `docs/project/roadmap.md`
+**Traceability:** Downstream of approved feature breakdown; feeds `docs/boards/implementation-plan.md`, F5 product graph, F6 outfit graph and look store, and later F10/F11 inventory-aware recommendation paths.
+**Status:** Drafted for architecture-stage review.
+**Review:** Architecture-stage artifact; assess per `docs/.cursor/prompts/review-pass.md` and the project review rules.
+**Approval mode:** HUMAN_REQUIRED
 **Trigger:** issue-created automation (GitHub issue #27)
 
 ---
