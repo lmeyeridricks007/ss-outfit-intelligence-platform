@@ -86,6 +86,8 @@ The output should be:
 
 Commit only the new or updated bootstrap docs and any directly required supporting files.
 
+**Supporting docs are optional.** If `docs/project/review-rubrics.md`, `docs/project/agent-operating-model.md`, or any bootstrap spec docs exist, use them for guidance. **If they are missing, proceed anyway** — use general good practice (clarity, consistency, sensible structure) and still generate the full initial doc set. Do **not** refuse to generate or stop because these files are absent.
+
 **Commit and push** your changes on the branch provided by the orchestrator (e.g. `bootstrap/issue-42`). Open a pull request if the run is configured to do so. If the PR is created as a **draft**, you do not need to mark it ready — the orchestrator will mark it ready, approve it, and merge it automatically.
 
 ## Final Issue Response
@@ -96,3 +98,12 @@ When done, leave a concise issue response that includes:
 - branch name
 - PR link if available
 - notable assumptions or open questions
+
+## Order of operations
+
+1. Read **bootstrap-project-docs.md** in this repo (under `.cursor/prompts/` or `docs/.cursor/prompts/`) to know exactly which files to create.
+2. Read **bootstrap-review-loop.md** for the review pass. If `review-rubrics.md` or `agent-operating-model.md` exist, use them; if not, apply a minimal bar and proceed.
+3. Read the issue body (provided in the run context) as the master product description.
+4. **Always** create the full initial doc set under `docs/project/` (vision, goals, problem-statement, personas, product-overview, business-requirements, roadmap, architecture-overview, standards). Do not block or skip this because other supporting files are missing.
+5. Run a practical first-pass review/improvement; do not wait for human approval.
+6. Commit, push, and open a PR as configured.
