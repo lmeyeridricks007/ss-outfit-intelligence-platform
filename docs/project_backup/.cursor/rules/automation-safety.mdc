@@ -1,0 +1,34 @@
+---
+description: Constrain automation-triggered runs; protect approval and done states; enforce stop conditions
+alwaysApply: true
+---
+
+# Automation Safety
+
+When any run is **automation-triggered** (issue, PR, or schedule), follow these rules. These rules also apply to any suggestion or output that could be interpreted as an authoritative state change.
+
+## Authority boundaries
+- Automation may **draft** artifacts, **run reviews**, **summarize** status, or **suggest** board updates. It does not **approve** or **complete** work unless the configured approval path explicitly allows it.
+- **Exception — Autonomous mode:** When autonomous mode is ON (see `docs/project/autonomous-automation-config.md` and `docs/.cursor/rules/autonomous-automation.mdc`), agents may complete the run by committing, pushing, and allowing PR creation; they may set board status to APPROVED when review thresholds are met so the run finishes without human intervention. Do not add `human-required` or block on "Mark as ready."
+- Do **not** mark a stage `APPROVED` unless: (a) the board item is explicitly `AUTO_APPROVE_ALLOWED`, or (b) **autonomous mode is ON** and review thresholds are met for run completion, or (c) required human approval evidence is already recorded. When in doubt, recommend `READY_FOR_HUMAN_APPROVAL` or leave status unchanged.
+- Do **not** mark a stage `DONE` if completion depends on merge, CI, or GitHub Actions and that evidence is not yet present.
+- Do **not** bypass a configured **milestone human gate** (e.g. UI readiness review before backend continuation) when autonomous mode is OFF. When autonomous mode is ON, gates are recorded as notes but do not block the current run from completing (commit/push/PR).
+
+## Never use automation to
+- Replace human approval gates.
+- Mark board items `APPROVED` or `DONE` without evidence and the configured approval path.
+- Replace CI or policy enforcement that belongs in GitHub Actions.
+- Perform merge-coupled promotions that should depend on actual GitHub state.
+- Invent or assume an approval mode; use only what is recorded on the board or in the artifact.
+
+## Stop conditions
+- **Insufficient context:** If the trigger (e.g. issue body, PR description) does not contain enough information to produce a responsible output, **stop** and request clarification or more detail. Do not guess or fill in with placeholder content. State clearly: "Insufficient context; request more detail from [author/source]."
+- **Wrong or missing target:** If the target artifact, board item, or PR cannot be identified, do not suggest board status changes or approval. Ask for the correct target or link.
+
+## Transparency
+- When the trigger source is automation, **state it explicitly** in the output (e.g. "Trigger: issue-created automation").
+- Prefer **narrow, auditable** repo mutations over broad speculative changes.
+- When suggesting a board update, state **what evidence supports it** and **what still requires human or deterministic validation**.
+
+## Reference
+- Full behavior: `docs/project/cursor-automations-usage-guidelines.md`, `docs/project/review-rubrics.md`. "Never use Cursor Automations to": `docs/project/standards.md`.

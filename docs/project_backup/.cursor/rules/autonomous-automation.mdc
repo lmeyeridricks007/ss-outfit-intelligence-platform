@@ -1,0 +1,27 @@
+---
+description: When autonomous mode is ON, agents complete the run without waiting for human approval; commit and push; allow PR creation.
+alwaysApply: true
+---
+
+# Autonomous Automation Mode
+
+When **autonomous automation mode** is enabled (see `docs/project/autonomous-automation-config.md`), apply the following. This overrides any "wait for human approval" or "do not commit" guidance only for the purpose of completing the automation run.
+
+## Agent behavior (autonomous mode ON)
+
+- **Do not stop** for "Mark as ready" or for human approval before committing or pushing.
+- **Do** generate the full artifact, update the relevant board row, **commit and push** the branch, and allow PR creation (or create the PR if that is the agent's responsibility).
+- **Do not pause** before commit/push/PR; complete the run so the orchestrator can detect branch push and PR.
+- Approval-gate language (e.g. "Human approval at UI readiness") remains as **notes** in the artifact or board; do not use it to block completing the run.
+- For board status: you may set status to APPROVED when review thresholds are met so the stage completes in this run; do not leave the run waiting for a human to click approve.
+- GitHub is the source of truth; the orchestrator will update labels and comments from run state.
+
+## When autonomous mode is OFF
+
+- Respect the standard automation-safety and approval rules (do not approve or complete without evidence and configured approval path).
+- Do not commit or push from automation unless explicitly allowed.
+
+## Reference
+
+- Config: `docs/project/autonomous-automation-config.md`
+- Orchestrator flow: `docs/project/github-issues-orchestrator-cursor-api-dashboard.md`

@@ -1,0 +1,29 @@
+---
+description: Keep domain language aligned to the outfit intelligence platform; identity, events, and data
+alwaysApply: true
+---
+
+# Recommendation Domain Language
+
+## Recommendation framing
+- Frame recommendations as **complete-look** and **context-aware** decisions, not only item similarity or "frequently bought together."
+- Identify **recommendation type** when describing outputs: outfit, cross-sell, upsell, occasion-based, contextual, personal, style bundle.
+- Identify the **consuming surface**: PDP, cart, homepage, email, clienteling, admin.
+- Use **look** for the product grouping; **outfit** for the customer-facing complete-look concept.
+
+## Modes and sources
+- **RTW** (Ready-to-Wear) vs **CM** (Custom Made): use explicitly when requirements or workflows differ (e.g. immediacy vs appointment context).
+- **Curated** vs **rule-based** vs **AI-ranked**: distinguish recommendation sources when discussing logic, overrides, or governance.
+
+## Governance and measurement
+- Keep **merchandising control**, **analytics**, and **governance** in scope for production-facing features.
+- When specifying events or telemetry, align with **recommendation telemetry**: impression, click, save, add-to-cart, purchase, dismiss, override. Persist **recommendation set ID** and **trace ID** with outcome events; record variant, experiment, and rule context for optimization. See `docs/project/data-standards.md` for event and identity standards.
+
+## Identity and data
+- Use **stable canonical IDs** for products, customers, looks, rules, campaigns, and experiments. Maintain source-system identifier mappings explicitly. When merging profiles across systems, record **identity resolution confidence**. Do not assume one channel identifier is globally reliable without mapping logic.
+- **Privacy and consent:** Only use customer data permitted for the use case and region. Respect consent and opt-out signals. Do not expose sensitive profile reasoning in customer-facing surfaces.
+
+## References
+- Glossary: `docs/project/glossary.md`.
+- Domain and product: `docs/project/domain-model.md`, `docs/project/product-overview.md`.
+- Identity, events, and telemetry: `docs/project/data-standards.md`.
