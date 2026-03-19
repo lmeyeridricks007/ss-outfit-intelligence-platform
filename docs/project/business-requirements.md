@@ -8,6 +8,8 @@ Define the business requirements for an AI Outfit Intelligence Platform that ena
 
 The platform must support both Ready-to-Wear and Custom Made recommendation experiences and produce recommendation outputs that are style-aware, context-aware, and commercially useful.
 
+Bootstrap scope covers the shared platform, data, and governance needed for both modes. Initial delivery is expected to prioritize RTW recommendations on high-intent ecommerce surfaces first, with deeper CM-specific decision support phased in after the shared foundation is proven.
+
 ## 3. Target users
 
 ### Primary users
@@ -163,6 +165,15 @@ The platform must support recommendation logic for:
 - compatibility with configured customer garments
 
 RTW and CM may share platform infrastructure but should not be forced into identical recommendation rules or user journeys.
+CM is in scope for the platform architecture and standards from the start, even if first production launches defer some CM scenarios to later roadmap phases.
+
+## 6.6 Recommendation contract framing
+
+The platform must support a stable recommendation response model in which:
+
+- response groups such as outfits, cross-sell, upsell, and style bundles remain consistent across channels
+- occasion-based, contextual, and personal recommendation logic can act as ranking or strategy dimensions within those response groups
+- recommendation metadata is sufficient for analytics, experimentation, and operator auditability without requiring each surface to invent its own interpretation
 
 ## 7. Workflow requirements
 
@@ -209,6 +220,7 @@ Authorized operators must be able to create curated looks, define rules, apply e
 - Customer data used for personalization can be governed in accordance with regional privacy requirements.
 - Recommendation surfaces can consume a shared API contract even if UI implementations differ by channel.
 - Early releases will focus on a subset of categories and surfaces before reaching full channel coverage.
+- The initial launch path will prioritize RTW complete-look recommendations on PDP and cart surfaces unless stakeholders explicitly choose a different first surface during later planning.
 
 ## 11. Out-of-scope items
 
@@ -220,7 +232,7 @@ Authorized operators must be able to create curated looks, define rules, apply e
 
 ## 12. Open questions
 
-- Which surface should be the initial production launch target: PDP, cart, email, or clienteling?
+- Should the assumed initial RTW launch sequence remain PDP followed by cart, or is there a stronger business case for changing the first production surface?
 - What level of real-time weather and location precision is operationally justified for launch?
 - Which customer signals are available at launch with reliable identity resolution and consent coverage?
 - How much merchandiser override should be hard override versus ranking influence?

@@ -8,6 +8,8 @@ This document describes the product-level architecture for the Outfit Intelligen
 
 The platform should be structured as a shared recommendation layer between upstream data sources and downstream customer or operator experiences.
 
+Architecturally, the platform must be able to serve both RTW and CM use cases from the start. Delivery should still be phased so the first production releases can focus on RTW ecommerce flows without forcing later CM support into a separate platform.
+
 ### Core architectural layers
 
 1. **Source systems and data providers**
@@ -48,7 +50,7 @@ The platform should be structured as a shared recommendation layer between upstr
 4. Curated looks, compatibility rules, and business constraints are stored in platform-managed configuration.
 5. A channel requests recommendations with available context such as customer, product, location, weather, or occasion.
 6. The recommendation engine generates and ranks candidate products or looks using graph relationships, rules, context, and personalization.
-7. Delivery services return a response tailored to the requesting surface.
+7. Delivery services return a response tailored to the requesting surface, using stable response groups such as outfits, cross-sell, upsell, or style bundles.
 8. Impression and outcome events are captured for experimentation, analytics, and model or rule refinement.
 
 ## Major subsystems
@@ -84,6 +86,15 @@ Normalizes location, weather, season, holiday, and session context into reusable
 ## 7. Delivery API and channel adapters
 
 Exposes recommendation responses to channel consumers using a shared contract. Channel adapters may enforce surface-specific limits, presentation metadata, or fallbacks.
+
+### Contract framing
+
+The shared contract should separate:
+
+- **response groups** that define what the consuming surface renders, such as outfits, cross-sell, upsell, and style bundles
+- **strategy metadata** that explains how the recommendation set was generated or influenced, such as curated, rule-based, AI-ranked, occasion-based, contextual, or personal logic
+
+This keeps channel consumers aligned on presentation semantics while preserving enough metadata for experimentation, auditing, and operator diagnostics.
 
 ## 8. Merchandising and analytics operations
 
@@ -141,3 +152,5 @@ Expected response groupings may include:
 - crossSell
 - upsell
 - styleBundles
+
+The same response may also carry strategy metadata indicating whether a set was primarily occasion-based, contextual, personal, curated, rule-based, or AI-ranked.

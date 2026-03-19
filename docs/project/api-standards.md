@@ -35,9 +35,13 @@ The contract should allow multiple response groups such as:
 - upsell
 - styleBundles
 
+Occasion-based, contextual, and personal recommendation logic should normally appear as strategy metadata on a recommendation set or response group, not as incompatible top-level response shapes for each surface.
+
 ## 3. Contract consistency rules
 
 - Every recommendation object must include stable IDs for the recommendation set and the underlying items or looks.
+- Every recommendation group must identify its group type, such as outfit, cross-sell, upsell, or style bundle.
+- Every recommendation set should expose strategy metadata that captures the active recommendation dimensions, such as occasion-based, contextual, personal, curated, rule-based, or AI-ranked.
 - Every response must identify the strategy or variant metadata needed for analytics and experimentation.
 - Product references should use canonical product identifiers rather than only display names.
 - Optional explanation or badge fields must be clearly typed and safe for customer display.

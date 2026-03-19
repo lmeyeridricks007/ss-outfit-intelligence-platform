@@ -12,7 +12,8 @@ The platform should maintain stable canonical IDs for:
 - variants or sellable units where needed
 - customers
 - anonymous sessions
-- looks or outfit definitions
+- looks as internal curated or structured groupings
+- outfits as customer-facing complete-look recommendation groupings where they must be persisted separately from looks
 - recommendation sets
 - rules
 - campaigns
@@ -50,6 +51,7 @@ Each outcome event should carry:
 
 - recommendationSetId
 - traceId
+- recommendationGroupType
 - strategy or variant identifier
 - channel or surface
 - product or look references involved

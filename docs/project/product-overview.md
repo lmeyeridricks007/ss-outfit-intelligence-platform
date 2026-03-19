@@ -9,6 +9,8 @@ The platform must support both:
 - Ready-to-Wear (RTW) recommendation journeys
 - Custom Made (CM) recommendation journeys, including guidance for fabrics, palettes, shirt and tie pairings, and premium option selection around configured garments
 
+Both RTW and CM are in scope at the platform and architecture level from bootstrap. Delivery depth is intentionally phased: early production launches should prioritize RTW journeys on high-intent ecommerce surfaces while preserving the data model, API contract, and governance needed to expand into richer CM decision support later.
+
 ## Primary channels and surfaces
 
 - product detail pages
@@ -28,6 +30,15 @@ The platform must support both:
 - occasion-based recommendations
 - contextual recommendations
 - personal recommendations based on customer profile and behavior
+
+## Recommendation expression model
+
+For product and contract design, the platform should distinguish between:
+
+- **response groups** such as outfits, cross-sell, upsell, and style bundles
+- **strategy dimensions** such as occasion-based, contextual, and personal recommendation logic that can influence any response group
+
+This distinction keeps customer-facing presentation stable while allowing recommendation generation to blend multiple strategies behind the same surface contract.
 
 ## Major user journeys
 

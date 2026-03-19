@@ -10,6 +10,7 @@ This roadmap defines a phased delivery order for the initial Outfit Intelligence
 - Start with a narrow set of recommendation surfaces that can prove commercial lift quickly.
 - Introduce merchandising governance and analytics early so recommendation quality can be tuned safely.
 - Add deeper personalization and CM support after the data and delivery foundations are stable.
+- Preserve CM compatibility in the shared architecture and data model even when early launches are RTW-first.
 
 ## Phase 0: Foundations and data readiness
 

@@ -16,6 +16,8 @@ Use consistent language across all future artifacts:
 - **Rule-based**: determined by deterministic compatibility or business logic.
 - **AI-ranked**: ordered or scored by model-based logic.
 - **Surface**: the consuming experience such as PDP, cart, homepage, email, or clienteling.
+- **Response group**: the contract-level grouping rendered by a surface, such as outfit, cross-sell, upsell, or style bundle.
+- **Strategy dimension**: the reason or method influencing a recommendation set, such as occasion-based, contextual, personal, curated, rule-based, or AI-ranked.
 
 Avoid collapsing these terms into generic "recommendations" when the distinction matters for implementation or measurement.
 
@@ -38,6 +40,7 @@ Avoid collapsing these terms into generic "recommendations" when the distinction
 
 - Favor phased delivery over big-bang rollout.
 - Prioritize reusable platform capabilities before channel sprawl.
+- Keep CM in architectural scope from the start even when launch sequencing prioritizes RTW surfaces first.
 - Use experimentation and measurement as release gates for expanding recommendation strategies.
 - Preserve human override and governance paths for merchandising and clienteling workflows.
 - Distinguish bootstrap documentation, business requirements, architecture, implementation planning, build, and QA stages; do not merge them prematurely.
@@ -62,6 +65,7 @@ Avoid collapsing these terms into generic "recommendations" when the distinction
 ## 7. API, data, UI, and integration expectations
 
 - Shared recommendation APIs should use stable contracts and explicit versioning.
+- Shared recommendation contracts should keep response groups stable while exposing strategy dimensions as metadata rather than multiplying top-level response shapes.
 - Canonical identifiers must exist for products, customers, looks, campaigns, and experiments.
 - Event telemetry must connect recommendation exposures to outcomes such as click, save, add-to-cart, purchase, dismiss, and override.
 - User-facing experiences should present recommendation modules consistently while allowing surface-specific layouts.
