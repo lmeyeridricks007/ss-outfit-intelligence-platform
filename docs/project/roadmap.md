@@ -69,7 +69,7 @@ Deliver the first production recommendation experience on the highest-value comm
 
 ### Objective
 
-Move from primarily curated and rule-driven recommendations to customer- and context-aware ranking across more surfaces.
+Move from primarily curated and rule-based recommendations to customer- and context-aware ranking across more surfaces.
 
 ### Key themes
 

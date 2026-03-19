@@ -19,7 +19,7 @@ These standards define how recommendation outputs should appear and behave acros
 - Cart modules should focus on add-on relevance, not distraction from checkout intent.
 - Homepage and personalization modules should reflect customer or contextual relevance more strongly than generic merchandising.
 
-### Style inspiration or look-builder surfaces
+### Style inspiration or look builder surfaces
 
 - Show complete outfits with clear item composition.
 - Make it easy to move from inspiration to item-level action.
