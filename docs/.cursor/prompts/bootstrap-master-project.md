@@ -86,6 +86,8 @@ The output should be:
 
 Commit only the new or updated bootstrap docs and any directly required supporting files.
 
+**Commit and push** your changes on the branch provided by the orchestrator (e.g. `bootstrap/issue-42`). Open a pull request if the run is configured to do so. If the PR is created as a **draft**, you do not need to mark it ready — the orchestrator will mark it ready, approve it, and merge it automatically.
+
 ## Final Issue Response
 
 When done, leave a concise issue response that includes:
