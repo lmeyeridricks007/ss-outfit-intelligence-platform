@@ -26,6 +26,7 @@ Avoid collapsing these terms into generic "recommendations" when the distinction
 - Documents should be implementation-oriented, concise, and explicit about assumptions and open questions.
 - Do not hide unresolved decisions; record them directly in the relevant artifact.
 - Do not create downstream issue fan-out or board seeding artifacts inside bootstrap documents.
+- Keep RTW and CM distinctions explicit when behavior, constraints, or interfaces differ.
 
 ## 3. Traceability standards
 
@@ -43,23 +44,32 @@ Avoid collapsing these terms into generic "recommendations" when the distinction
 - Distinguish bootstrap documentation, business requirements, architecture, implementation planning, build, and QA stages; do not merge them prematurely.
 - Where workflow states are needed in future artifacts or boards, use this lifecycle vocabulary consistently: `TODO`, `IN_PROGRESS`, `NEEDS_REVIEW`, `IN_REVIEW`, `CHANGES_REQUESTED`, `READY_FOR_HUMAN_APPROVAL`, `APPROVED`, `DONE`.
 
-## 5. Quality standards
+## 5. Requirement and traceability standards
+
+- Later-stage artifacts should reference the relevant business requirement IDs or requirement groupings when implementation work begins.
+- Recommendation types, surfaces, and workflows must stay traceable from business requirements to architecture, implementation plans, analytics, and experiments.
+- Open questions that materially affect architecture, privacy, or channel behavior must remain visible until resolved.
+- Channel-specific behavior should build on shared contracts unless divergence is explicitly justified.
+
+## 6. Quality standards
 
 - Recommendations must be style-compatible, not merely behaviorally co-occurring.
 - Customer-facing recommendations must degrade gracefully when context is missing or low confidence.
 - Inventory, assortment, and business-rule filtering must be applied before recommendations are shown.
 - Empty-state and low-confidence behaviors must be explicitly designed in later implementation work.
 - Analytics must support evaluation by recommendation type, surface, segment, and strategy.
+- Recommendation quality should be reviewed with merchandising stakeholders before broad rollout.
 
-## 6. Governance and safety standards
+## 7. Governance and safety standards
 
 - Respect regional privacy, consent, and data-use constraints for personalization.
 - Do not expose sensitive customer reasoning in customer-facing explanation text.
 - Maintain auditability for recommendation generation inputs, applicable rules, and ranking strategy.
 - Merchandising rules and overrides must be governed, versioned, and reviewable.
 - Recommendations for assisted-selling channels should support human judgment rather than replace it.
+- Low-confidence identity or weak context signals should not silently produce over-personalized experiences.
 
-## 7. API, data, UI, and integration expectations
+## 8. API, data, UI, and integration expectations
 
 - Shared recommendation APIs should use stable contracts and explicit versioning.
 - Canonical identifiers must exist for products, customers, looks, campaigns, and experiments.
@@ -74,14 +84,14 @@ Detailed standards for each area should live in:
 - `ui-standards.md`
 - `integration-standards.md`
 
-## 8. Naming and structure expectations
+## 9. Naming and structure expectations
 
 - Use clear, business-meaningful names for recommendation types, surfaces, and workflows.
 - Keep channel-specific details out of shared platform naming where possible.
 - Prefer stable identifiers over display names for machine contracts and analytics.
 - Separate product-level concepts from technical implementation details when naming docs and services.
 
-## 9. Review expectations
+## 10. Review expectations
 
 - Review bootstrap and later-stage artifacts for clarity, completeness, implementation readiness, consistency, dependency correctness, and automation safety.
 - Flag open questions instead of inventing certainty.

@@ -40,6 +40,15 @@ The platform should be structured as a shared recommendation layer between upstr
    - audit trails and diagnostics
    - monitoring and operational controls
 
+## Control-plane and runtime split
+
+To keep the platform manageable, later implementation work should preserve a distinction between:
+
+- **runtime serving path**: APIs and services required to answer recommendation requests quickly
+- **control plane**: curation tools, rule management, experiment configuration, reporting, and operational diagnostics
+
+This separation is important because runtime availability and latency constraints differ from operator workflow requirements.
+
 ## Representative data flow
 
 1. Product, customer, and event data are ingested from source systems.
@@ -50,6 +59,18 @@ The platform should be structured as a shared recommendation layer between upstr
 6. The recommendation engine generates and ranks candidate products or looks using graph relationships, rules, context, and personalization.
 7. Delivery services return a response tailored to the requesting surface.
 8. Impression and outcome events are captured for experimentation, analytics, and model or rule refinement.
+
+## Recommendation request path
+
+At runtime, a typical recommendation request should follow this pattern:
+
+1. A channel sends a recommendation request with available context such as customer, product, surface, location, weather, session, or occasion.
+2. The delivery layer validates the request and resolves the applicable surface policy.
+3. Candidate generation retrieves valid products and looks from curated sources, compatibility relationships, and historical affinities.
+4. Rules and governance filters remove invalid, unavailable, or suppressed items.
+5. Ranking blends curated priority, deterministic scoring, context, and model-based signals.
+6. The response is packaged with recommendation-set metadata, strategy identifiers, and display-safe attributes.
+7. The channel renders the results and emits attributable telemetry events.
 
 ## Major subsystems
 
@@ -89,6 +110,17 @@ Exposes recommendation responses to channel consumers using a shared contract. C
 
 Provides operator controls for curated looks, rules, campaign priorities, exclusions, experiments, performance reporting, and diagnostics.
 
+## Primary contracts and artifacts
+
+The architecture should eventually standardize the following contract families:
+
+- canonical product and assortment data contract
+- customer and identity mapping contract
+- event and recommendation telemetry contract
+- curated look and rule configuration contract
+- recommendation request and response contract
+- experiment and variant attribution contract
+
 ## External integrations
 
 - Shopify or equivalent ecommerce systems
@@ -106,6 +138,13 @@ Provides operator controls for curated looks, rules, campaign priorities, exclus
 - Identity resolution confidence must be explicit so low-confidence joins do not silently distort personalization.
 - Inventory and assortment freshness must be accounted for before recommendations are delivered to customer-facing surfaces.
 
+## External integration boundaries
+
+- Commerce, POS, OMS, and ESP platforms remain systems of record.
+- Weather and other context providers are optional enrichments, not mandatory serving dependencies.
+- Clienteling and web experiences consume recommendation outputs but should not embed recommendation logic locally.
+- Analytics tools may consume telemetry, but the platform should retain enough metadata to audit recommendation behavior independently.
+
 ## Operational assumptions
 
 - Early implementations may use rule-heavy logic with curated inputs before deeper model sophistication.
@@ -120,6 +159,13 @@ Provides operator controls for curated looks, rules, campaign priorities, exclus
 - The architecture must support RTW and CM without collapsing their distinct business rules into one generic model.
 - Data freshness, latency, and reliability requirements differ by channel and should be designed as explicit interface constraints later.
 - Governance for privacy, consent, and region-specific data use must be enforceable at the data and delivery layers.
+
+## Initial implementation assumptions
+
+- Early releases may rely more heavily on curated looks and deterministic compatibility rules than on sophisticated models.
+- Recommendation serving should tolerate missing weather, weak identity confidence, or incomplete profile data.
+- Launch surfaces should prefer predictable latency and safe fallback responses over maximal ranking complexity.
+- Cross-channel reuse is more important than perfect feature parity in the first release wave.
 
 ## API direction
 

@@ -40,6 +40,12 @@ This roadmap defines a phased delivery order for the initial Outfit Intelligence
 - recommendation response contract is stable enough for channel integration
 - telemetry captures impression, click, add-to-cart, and purchase outcomes
 
+### Phase exit criteria
+
+- canonical product, customer, session, and recommendation-set identifiers are defined
+- the delivery API can return a stable response for at least one launch surface
+- operators can trace a recommendation response back to its strategy inputs
+
 ## Phase 1: RTW complete-look recommendations on priority ecommerce surfaces
 
 ### Objectives
@@ -71,6 +77,12 @@ This roadmap defines a phased delivery order for the initial Outfit Intelligence
 - live experiments or controlled rollout plan on priority surfaces
 - operational monitoring for latency, empty states, and attach-rate lift
 
+### Phase exit criteria
+
+- RTW complete-look recommendations are live or rollout-ready on the selected ecommerce surfaces
+- baseline attach-rate and conversion instrumentation is working end to end
+- fallback behavior for low-confidence or empty-result situations is defined and tested
+
 ## Phase 2: Contextual personalization and operator tooling
 
 ### Objectives
@@ -98,6 +110,12 @@ This roadmap defines a phased delivery order for the initial Outfit Intelligence
 - recommendation reporting shows outcomes by type, surface, and segment
 - contextual recommendation quality is validated against merchandising expectations
 
+### Phase exit criteria
+
+- merchandisers can manage curated looks, exclusions, and campaign priorities through platform workflows
+- customer-profile and context-aware strategies can be enabled selectively by region and consent policy
+- experimentation can compare curated, rule-based, and AI-ranked strategies reliably
+
 ## Phase 3: Cross-channel activation and email/clienteling delivery
 
 ### Objectives
@@ -123,6 +141,12 @@ This roadmap defines a phased delivery order for the initial Outfit Intelligence
 - recommendation outputs can be consumed consistently by non-web channels
 - measurement supports cross-channel attribution where feasible
 - stylist workflows confirm recommendations are useful as a starting point, not a blocker
+
+### Phase exit criteria
+
+- email and clienteling consumers can reuse the shared recommendation contract
+- cross-channel governance exists for channel-specific presentation and override logic
+- analytics can separate channel effects from underlying recommendation strategy effects
 
 ## Phase 4: Custom Made and advanced optimization
 
@@ -151,6 +175,12 @@ This roadmap defines a phased delivery order for the initial Outfit Intelligence
 - recommendation quality remains explainable despite more advanced ranking logic
 - platform operations can support broader surface and assortment coverage
 
+### Phase exit criteria
+
+- CM recommendation scenarios in scope are production-ready and auditable
+- advanced ranking does not break operator control or explanation needs
+- the platform can scale operationally to broader assortment, geography, and surface coverage
+
 ## What should happen earlier vs later
 
 ### Earlier
@@ -174,6 +204,16 @@ This roadmap defines a phased delivery order for the initial Outfit Intelligence
 - Phase 2 depends on production learnings and telemetry from Phase 1.
 - Phase 3 depends on a stable API and operator model from Phases 1 and 2.
 - Phase 4 depends on the shared platform capabilities from earlier phases plus CM-specific integration and domain validation.
+
+## Recommended launch path
+
+The recommended launch path is:
+
+1. establish the shared data, API, and telemetry foundations
+2. launch RTW complete-look recommendations on PDP and cart
+3. add contextual and returning-customer personalization with operator tooling
+4. expand into email and clienteling once the core contract and governance model are stable
+5. extend the platform into CM-specific recommendation support and advanced optimization
 
 ## Review and stop-continue checkpoints
 

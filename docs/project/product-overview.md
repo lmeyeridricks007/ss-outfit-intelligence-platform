@@ -29,6 +29,16 @@ The platform must support both:
 - contextual recommendations
 - personal recommendations based on customer profile and behavior
 
+## Recommendation sources
+
+The platform should support three recommendation sources that can be blended per request:
+
+- **curated**: merchandiser- or stylist-defined looks, bundles, and priorities
+- **rule-based**: deterministic compatibility, exclusions, channel policies, and business constraints
+- **AI-ranked**: model-based ordering or scoring of otherwise valid candidates
+
+The product should treat these as cooperating layers, not mutually exclusive alternatives.
+
 ## Major user journeys
 
 ## 1. Anchor-product outfit completion
@@ -58,6 +68,16 @@ A known customer receives recommendations that complement prior purchases and in
 ## 5. Assisted selling and clienteling support
 
 Stylists and clienteling teams use the same recommendation logic, with room for human override, to assemble and discuss looks with customers.
+
+## How the platform works at a high level
+
+1. Collect available product, customer, session, and context signals.
+2. Determine recommendation intent such as outfit completion, occasion, wardrobe extension, upsell, or cross-sell.
+3. Retrieve candidate products and looks from curated inputs, compatibility rules, and learned relationships.
+4. Filter by inventory, business rules, channel constraints, and privacy or consent boundaries.
+5. Rank and package the recommendation set for the requesting surface.
+6. Return machine-usable metadata for analytics, experimentation, and auditability.
+7. Capture impression and outcome telemetry for optimization.
 
 ## Major workflows
 
@@ -94,19 +114,24 @@ Stylists and clienteling teams use the same recommendation logic, with room for 
 - experimentation and analytics
 - merchandising admin and governance controls
 
-## Product boundaries
+## Primary product boundaries
 
-## In scope at the platform level
+### In scope
 
-- generating recommendation sets for multiple surfaces
+- generating recommendation sets for multiple surfaces and channels
 - supporting both RTW and CM recommendation logic
 - enabling curated, rule-based, and AI-ranked recommendation strategies
+- exposing recommendation outputs through a shared API layer
 - measuring recommendation outcomes and experimentation
-- supporting merchandiser and operator controls
+- supporting merchandiser, analyst, marketing, and clienteling workflows that depend on recommendation control or insight
 
-## Out of scope at bootstrap level
+### Out of scope
 
-- final feature-level implementation plans for each surface
-- downstream issue fan-out or board seeding
-- replacing core commerce, POS, or marketing systems
-- full editorial content management beyond recommendation-oriented look curation
+- replacing core commerce, OMS, POS, or ESP systems
+- implementing every consumer surface in the initial release
+- acting as a full editorial content management platform
+- creating downstream issue fan-out, feature decomposition, or implementation artifacts in this bootstrap pass
+
+## Product shape for initial delivery
+
+The initial delivery focus should be RTW complete-look recommendations on high-intent ecommerce surfaces, supported by shared data, API, and telemetry foundations. Later phases should expand personalization depth, operator tooling, cross-channel activation, and CM-specific recommendation logic.
