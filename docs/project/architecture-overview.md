@@ -40,6 +40,30 @@ The platform should be structured as a shared recommendation layer between upstr
    - audit trails and diagnostics
    - monitoring and operational controls
 
+## Offline and online architecture split
+
+The architecture should clearly separate preparation-time processing from request-time decisioning.
+
+### Offline or nearline preparation responsibilities
+
+- catalog normalization and enrichment
+- curated look ingestion and publication
+- compatibility graph updates
+- customer profile aggregation and segmentation
+- event aggregation and feature preparation
+- experiment and campaign configuration publication
+
+### Online or request-time responsibilities
+
+- request validation and context normalization
+- candidate retrieval from look, relationship, and rule-aware sources
+- availability and policy filtering
+- ranking and recommendation-set assembly
+- response shaping for the consuming surface
+- recommendation-set metadata issuance for telemetry and tracing
+
+This separation is important so the serving path remains predictable while still benefiting from richer upstream intelligence.
+
 ## Representative data flow
 
 1. Product, customer, and event data are ingested from source systems.
@@ -50,6 +74,17 @@ The platform should be structured as a shared recommendation layer between upstr
 6. The recommendation engine generates and ranks candidate products or looks using graph relationships, rules, context, and personalization.
 7. Delivery services return a response tailored to the requesting surface.
 8. Impression and outcome events are captured for experimentation, analytics, and model or rule refinement.
+
+## Request-time decision sequence
+
+At request time, the platform should follow a predictable order of operations:
+
+1. identify the recommendation intent from explicit request parameters and available context
+2. assemble candidate looks or items from curated, graph, and rule-eligible sources
+3. apply exclusions, compatibility checks, inventory filters, and channel constraints
+4. rank remaining candidates using the best available context and personalization signals
+5. attach recommendation-set metadata, strategy source, and trace identifiers
+6. return stable response groups with graceful empty or fallback behavior
 
 ## Major subsystems
 
@@ -89,6 +124,13 @@ Exposes recommendation responses to channel consumers using a shared contract. C
 
 Provides operator controls for curated looks, rules, campaign priorities, exclusions, experiments, performance reporting, and diagnostics.
 
+## Persistence and ownership expectations
+
+- source systems remain the system of record for products, orders, customer accounts, and campaign execution
+- the platform owns normalized recommendation-facing product attributes, look definitions, rule configuration, recommendation metadata, and analytics lineage
+- channel applications own rendering, placement, and local interaction behavior
+- analytics tooling may consume telemetry, but the recommendation platform must preserve enough identifiers to reconstruct recommendation outcomes
+
 ## External integrations
 
 - Shopify or equivalent ecommerce systems
@@ -120,6 +162,13 @@ Provides operator controls for curated looks, rules, campaign priorities, exclus
 - The architecture must support RTW and CM without collapsing their distinct business rules into one generic model.
 - Data freshness, latency, and reliability requirements differ by channel and should be designed as explicit interface constraints later.
 - Governance for privacy, consent, and region-specific data use must be enforceable at the data and delivery layers.
+
+## Architecture-level risks to resolve in later stages
+
+- how much recommendation logic should be precomputed versus request-time for the first launch slice
+- how operator-authored rules should override or influence AI ranking without creating opaque behavior
+- what freshness targets are required for inventory-sensitive surfaces such as PDP and cart
+- how CM configuration states are represented so partially configured garments can still receive compatible recommendations
 
 ## API direction
 

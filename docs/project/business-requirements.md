@@ -8,6 +8,18 @@ Define the business requirements for an AI Outfit Intelligence Platform that ena
 
 The platform must support both Ready-to-Wear and Custom Made recommendation experiences and produce recommendation outputs that are style-aware, context-aware, and commercially useful.
 
+## 2.1 Recommended initial release boundary
+
+For initial downstream planning, the recommended first production slice is:
+
+- RTW complete-look recommendations first
+- anchor-product recommendation requests first
+- product detail page and cart as the first customer-facing surfaces
+- shared telemetry, experimentation, and analytics from the first release
+- minimum viable merchandising controls for curated looks, compatibility rules, and exclusions
+
+This boundary should guide later planning unless a documented business decision changes the launch order.
+
 ## 3. Target users
 
 ### Primary users
@@ -164,6 +176,14 @@ The platform must support recommendation logic for:
 
 RTW and CM may share platform infrastructure but should not be forced into identical recommendation rules or user journeys.
 
+## 6.6 Business-operating requirements
+
+- Recommendation-serving paths for customer-facing surfaces must return predictable results even when optional signals such as weather, identity, or recent behavior are unavailable.
+- The platform must support explicit fallback behavior so channels can render useful recommendation modules instead of silent failure states.
+- Operators must be able to distinguish whether a recommendation set was primarily curated, rule-shaped, or AI-ranked.
+- Recommendation outputs must support attribution from impression through purchase at recommendation-set level.
+- Launch readiness for any surface must include recommendation-quality review with merchandising stakeholders, not only technical deployment.
+
 ## 7. Workflow requirements
 
 ### 7.1 Product-driven recommendation workflow
@@ -201,6 +221,7 @@ Authorized operators must be able to create curated looks, define rules, apply e
 - Channel implementations will vary in latency tolerance and available context.
 - CM recommendations may depend on partially configured garments and appointment workflows.
 - External integrations such as weather and marketing systems may have reliability or freshness limits.
+- Merchandising teams must be able to influence recommendation behavior without requiring a code release for routine curation changes.
 
 ## 10. Assumptions
 
@@ -209,6 +230,7 @@ Authorized operators must be able to create curated looks, define rules, apply e
 - Customer data used for personalization can be governed in accordance with regional privacy requirements.
 - Recommendation surfaces can consume a shared API contract even if UI implementations differ by channel.
 - Early releases will focus on a subset of categories and surfaces before reaching full channel coverage.
+- Product, merchandising, analytics, and channel teams can align on a controlled vocabulary for recommendation types, surfaces, occasion tags, and outcome events.
 
 ## 11. Out-of-scope items
 
@@ -226,3 +248,9 @@ Authorized operators must be able to create curated looks, define rules, apply e
 - How much merchandiser override should be hard override versus ranking influence?
 - Which CM recommendation scenarios are required in the first release versus later phases?
 - What explanation model, if any, should be exposed to customers and stylists?
+
+## 13. Governance notes
+
+- Customer-facing personalization must be limited to signals and explanations that are permitted by consent and regional policy.
+- Recommendation logic must remain reviewable by business stakeholders even when model-based ranking is introduced.
+- Later-stage implementation work should preserve a clear distinction between recommendation eligibility, ranking, and presentation so governance decisions can be audited cleanly.

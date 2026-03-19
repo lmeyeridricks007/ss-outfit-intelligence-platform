@@ -34,7 +34,20 @@ Avoid collapsing these terms into generic "recommendations" when the distinction
 - Key assumptions that affect data, privacy, or integration design must remain visible across artifacts until resolved.
 - Changes to terminology or scope must be updated consistently across all canonical docs.
 
-## 4. Delivery and lifecycle standards
+## 4. Minimum downstream artifact contract
+
+Any later feature, architecture, implementation-plan, or build artifact derived from this bootstrap layer should state:
+
+- the recommendation type or types in scope
+- the surface or channel in scope
+- the target user or operator persona
+- required input signals and dependencies
+- expected outputs or user-visible behaviors
+- fallback behavior for missing data, empty results, or low-confidence personalization
+- required telemetry and success measures
+- owner-facing controls, overrides, or governance constraints
+
+## 5. Delivery and lifecycle standards
 
 - Favor phased delivery over big-bang rollout.
 - Prioritize reusable platform capabilities before channel sprawl.
@@ -43,7 +56,7 @@ Avoid collapsing these terms into generic "recommendations" when the distinction
 - Distinguish bootstrap documentation, business requirements, architecture, implementation planning, build, and QA stages; do not merge them prematurely.
 - Where workflow states are needed in future artifacts or boards, use this lifecycle vocabulary consistently: `TODO`, `IN_PROGRESS`, `NEEDS_REVIEW`, `IN_REVIEW`, `CHANGES_REQUESTED`, `READY_FOR_HUMAN_APPROVAL`, `APPROVED`, `DONE`.
 
-## 5. Quality standards
+## 6. Quality standards
 
 - Recommendations must be style-compatible, not merely behaviorally co-occurring.
 - Customer-facing recommendations must degrade gracefully when context is missing or low confidence.
@@ -51,7 +64,14 @@ Avoid collapsing these terms into generic "recommendations" when the distinction
 - Empty-state and low-confidence behaviors must be explicitly designed in later implementation work.
 - Analytics must support evaluation by recommendation type, surface, segment, and strategy.
 
-## 6. Governance and safety standards
+## 7. Measurement and experimentation standards
+
+- Every launched recommendation experience should define its baseline, target outcome metric, and minimum telemetry requirements before rollout.
+- Experiment variants must be attributable at recommendation-set level.
+- Do not expand a recommendation strategy to additional surfaces if attribution, quality review, or fallback behavior is still ambiguous on the current surface.
+- Recommendation quality review should include both business relevance and operational stability, not only click metrics.
+
+## 8. Governance and safety standards
 
 - Respect regional privacy, consent, and data-use constraints for personalization.
 - Do not expose sensitive customer reasoning in customer-facing explanation text.
@@ -59,7 +79,7 @@ Avoid collapsing these terms into generic "recommendations" when the distinction
 - Merchandising rules and overrides must be governed, versioned, and reviewable.
 - Recommendations for assisted-selling channels should support human judgment rather than replace it.
 
-## 7. API, data, UI, and integration expectations
+## 9. API, data, UI, and integration expectations
 
 - Shared recommendation APIs should use stable contracts and explicit versioning.
 - Canonical identifiers must exist for products, customers, looks, campaigns, and experiments.
@@ -67,21 +87,27 @@ Avoid collapsing these terms into generic "recommendations" when the distinction
 - User-facing experiences should present recommendation modules consistently while allowing surface-specific layouts.
 - Integrations with commerce, POS, marketing, and contextual systems must be explicit about ownership, retries, and failure handling.
 
-Detailed standards for each area should live in:
+Detailed standards for each area live in:
 
 - `api-standards.md`
 - `data-standards.md`
 - `ui-standards.md`
 - `integration-standards.md`
 
-## 8. Naming and structure expectations
+## 10. Naming and structure expectations
 
 - Use clear, business-meaningful names for recommendation types, surfaces, and workflows.
 - Keep channel-specific details out of shared platform naming where possible.
 - Prefer stable identifiers over display names for machine contracts and analytics.
 - Separate product-level concepts from technical implementation details when naming docs and services.
 
-## 9. Review expectations
+## 11. Decision logging expectations
+
+- When a critical launch or scope decision remains unresolved, preserve it as an open question in the canonical doc set instead of embedding conflicting assumptions in downstream artifacts.
+- If downstream planning makes a recommended assumption, it must label that assumption explicitly and identify what decision would invalidate it.
+- Recommendation taxonomy changes must be reflected across business requirements, roadmap, architecture, and standards together.
+
+## 12. Review expectations
 
 - Review bootstrap and later-stage artifacts for clarity, completeness, implementation readiness, consistency, dependency correctness, and automation safety.
 - Flag open questions instead of inventing certainty.

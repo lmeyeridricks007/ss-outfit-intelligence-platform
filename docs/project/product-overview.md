@@ -9,6 +9,16 @@ The platform must support both:
 - Ready-to-Wear (RTW) recommendation journeys
 - Custom Made (CM) recommendation journeys, including guidance for fabrics, palettes, shirt and tie pairings, and premium option selection around configured garments
 
+## How recommendation generation should work
+
+The product should operate as a hybrid recommendation system rather than a single-model experience. For every request, the platform should be able to blend:
+
+- curated looks defined by merchandisers or stylists
+- rule-based compatibility and exclusion logic
+- AI-ranked ordering based on customer, product, and context signals
+
+This operating model is important because SuitSupply needs both brand control and adaptability. The platform should never assume that co-occurrence or popularity alone is sufficient for outfit quality.
+
 ## Primary channels and surfaces
 
 - product detail pages
@@ -77,6 +87,12 @@ Stylists and clienteling teams use the same recommendation logic, with room for 
 3. Monitor recommendation performance by type, surface, and customer segment.
 4. Run experiments and adjust rule or ranking strategies.
 
+### Delivery workflow by maturity stage
+
+1. Start with high-intent ecommerce requests where anchor-product context is strong.
+2. Reuse the same recommendation contracts and telemetry model across later channels.
+3. Add channel-specific presentation or orchestration only after the shared recommendation semantics are stable.
+
 ## Major capability areas
 
 - product catalog ingestion and enrichment
@@ -103,6 +119,18 @@ Stylists and clienteling teams use the same recommendation logic, with room for 
 - enabling curated, rule-based, and AI-ranked recommendation strategies
 - measuring recommendation outcomes and experimentation
 - supporting merchandiser and operator controls
+
+## Recommended initial release focus
+
+To reduce ambiguity for downstream planning, the recommended first production slice is:
+
+- RTW recommendation journeys first
+- product detail page and cart as the first customer-facing surfaces
+- anchor-product outfit completion as the first priority use case
+- a shared recommendation delivery API and telemetry model
+- a minimum merchandising workflow for curated looks, compatibility rules, and exclusions
+
+This is a recommended delivery focus, not a hard business decision. If the business chooses a different initial launch surface, later planning should still preserve the same platform-first shape.
 
 ## Out of scope at bootstrap level
 
