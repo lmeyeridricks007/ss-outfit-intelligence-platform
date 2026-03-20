@@ -1,0 +1,5 @@
+# Business requirements board
+
+| BR ID | Feature | Status | Owner | Reviewer | Approval Mode | Trigger Source | Inputs | Output | Exit Criteria | Notes | Promotes To |
+|-------|---------|--------|-------|----------|---------------|----------------|--------|--------|---------------|-------|-------------|
+| BR-001 | Complete-look recommendation capability | In Progress |  |  | autonomous | docs/project/business-requirements.md (BR-1); docs/project/product-overview.md; docs/project/problem-statement.md | docs/project/vision.md; docs/project/personas.md; anchor-product and occasion-led journeys; complete-look scope | docs/project/br/br-001-complete-look-recommendation-capability.md | Defines complete-look recommendation outcomes, in-scope surfaces, users, success metrics, and phase boundaries for downstream feature work | Issue #50; trigger: issue-intake automation; drafting BR artifact with Phase 1 focus on RTW PDP and cart. | FEAT-001 |
