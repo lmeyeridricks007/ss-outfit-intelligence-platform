@@ -76,6 +76,18 @@ This blended recommendation model must create value in three ways:
 - **Rule-based:** compatibility logic, exclusions, eligibility rules, inventory constraints, regional constraints, and campaign priorities
 - **AI-ranked:** scoring and ordering logic that uses customer, context, and performance signals to optimize eligible candidates
 
+## Intended blend and precedence
+
+The business intent for the blend is a clear, explainable sequence rather than an undefined "mixed ranking" approach:
+
+1. **Start with curated seeds where available.** Merchant-authored or merchant-approved looks, bundles, and campaign priorities define preferred style direction.
+2. **Expand or supplement with additional candidates.** Rule-safe candidates may be added when curated coverage is incomplete for the surface, region, assortment, or customer context.
+3. **Apply hard rules before optimization.** Compatibility, eligibility, inventory, regional, consent, and brand-safety constraints remove invalid options.
+4. **Allow AI ranking to optimize the eligible set.** AI may reorder, boost, or personalize within the allowed candidate pool to improve relevance and business performance.
+5. **Apply final merchant overrides and fallback logic.** Pins, suppressions, and fallback modes remain able to shape the final output when campaigns, confidence thresholds, or governance needs require it.
+
+This sequence means curated direction and rule safety define the decision space, while AI ranking optimizes inside that space rather than replacing it.
+
 ## Blended model requirements
 
 ### 1. Source roles must be explicit
