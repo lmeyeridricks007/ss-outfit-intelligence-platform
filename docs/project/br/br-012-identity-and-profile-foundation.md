@@ -176,7 +176,7 @@ The business should evaluate this requirement through downstream execution using
 
 Add or update `boards/business-requirements.md` for BR-012 with:
 
-- **Status:** `IN_PROGRESS` while drafting, then move to a non-blocking review state after push
+- **Status:** `IN_PROGRESS` while drafting, then `IN_REVIEW` after the branch is pushed
 - **Approval Mode:** `HUMAN_REQUIRED`
 - **Output:** `docs/project/br/br-012-identity-and-profile-foundation.md`
-- **Notes:** Triggered by issue-created automation for #61; downstream feature work should reference F4, F7, F22, and F26
+- **Notes:** Triggered by issue-created automation for #61; branch pushed on `br/issue-61`; downstream feature work should reference F4, F7, F22, and F26
