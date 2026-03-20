@@ -27,6 +27,13 @@ A customer shopping for a specific event or dress-code outcome such as a wedding
 - Responds well to clear outfit suggestions and simple rationale.
 - Needs fast confidence, not a deep styling education flow.
 
+### Decision drivers
+
+- appropriateness for the event
+- confidence that items work together
+- speed of outfit completion
+- price and perceived value of the full look
+
 ### What success looks like
 
 The customer sees a coherent look, understands why it fits the occasion, and purchases multiple compatible items in one journey.
@@ -54,6 +61,13 @@ A repeat customer with order history, preferences, and known fit or style patter
 - Often responds to replenishment, occasion, or wardrobe-extension needs.
 - May enter through email, direct product pages, or personalized landing experiences.
 - Expects recommendations to reflect purchase history and recency.
+
+### Decision drivers
+
+- relevance to owned wardrobe
+- trust that the brand remembers prior preferences
+- avoidance of duplicates or obvious mismatches
+- consistency across web, email, and assisted channels
 
 ### What success looks like
 
@@ -83,6 +97,13 @@ A customer browsing without a single fixed item in mind and looking for inspirat
 - May shop seasonally or in response to travel and climate.
 - Is more open to discovery if recommendations are visually and stylistically coherent.
 
+### Decision drivers
+
+- visual coherence of the suggested look
+- inspiration that still feels shoppable
+- clear progression from inspiration to basket
+- seasonal or contextual relevance
+
 ### What success looks like
 
 The customer discovers a look that feels tailored to their context and converts from inspiration into multi-item purchase behavior.
@@ -103,6 +124,12 @@ The customer discovers a look that feels tailored to their context and converts 
 - Manual look assembly is time-consuming during high-touch selling moments.
 - Digital recommendation systems may not support store-assisted workflows.
 
+### Decision drivers
+
+- speed to a credible starting look
+- confidence in fit, inventory, and occasion relevance
+- ability to override or refine platform suggestions
+
 ### What success looks like
 
 The stylist receives high-quality starting recommendations that accelerate assisted selling while preserving control over the final look.
@@ -121,6 +148,12 @@ The stylist receives high-quality starting recommendations that accelerate assis
 - Curated knowledge does not scale consistently across channels.
 - Overrides and seasonal logic are hard to operationalize cleanly.
 
+### Decision drivers
+
+- visibility into why a recommendation will appear
+- ability to influence ranking and exclusions without engineering changes
+- confidence that brand presentation remains consistent
+
 ### What success looks like
 
 The merchandiser can shape recommendation behavior with traceable rules and curated inputs while still benefiting from automated ranking.
@@ -138,6 +171,12 @@ The merchandiser can shape recommendation behavior with traceable rules and cura
 - Recommendation logic differs across channels, making learning inconsistent.
 - Outcome measurement is incomplete or hard to attribute.
 - Optimization depends on manual analysis rather than systematic telemetry.
+
+### Decision drivers
+
+- clean attribution from recommendation set to outcome
+- shared metrics across channels and strategies
+- ability to compare experiments and recommendation types reliably
 
 ### What success looks like
 

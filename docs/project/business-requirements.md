@@ -54,9 +54,9 @@ The platform is intended to:
 
 ## 6. In-scope requirements
 
-## 6.1 Recommendation outputs
+### BR-01 Recommendation outputs
 
-The platform must support:
+The platform must support the following recommendation types as first-class outputs:
 
 - outfit recommendations
 - cross-sell recommendations
@@ -66,7 +66,7 @@ The platform must support:
 - contextual recommendations
 - personal recommendations based on customer profile and behavior
 
-## 6.2 Recommendation surfaces
+### BR-02 Recommendation surfaces
 
 The platform must be able to serve recommendations to:
 
@@ -78,11 +78,13 @@ The platform must be able to serve recommendations to:
 - in-store clienteling interfaces
 - future mobile or API-driven experiences
 
-## 6.3 Input data and signals
+Different surfaces may consume different recommendation types, but all should rely on shared recommendation contracts and shared measurement.
 
-The platform must support ingestion and use of:
+### BR-03 Input data and signals
 
-### Customer signals
+The platform must support ingestion and use of the following signal groups.
+
+#### Customer signals
 
 - orders from Shopify, OMS, or other commerce systems
 - browsing behavior
@@ -96,7 +98,7 @@ The platform must support ingestion and use of:
 - stylist notes where available and permissioned
 - saved looks, favorites, and wishlists where available
 
-### Context signals
+#### Context signals
 
 - location and country
 - weather
@@ -104,7 +106,7 @@ The platform must support ingestion and use of:
 - holiday and event calendar
 - useful device or session context
 
-### Product data
+#### Product data
 
 - category
 - fabric
@@ -119,11 +121,11 @@ The platform must support ingestion and use of:
 - imagery
 - RTW and CM attributes
 
-## 6.4 Core platform capabilities
+### BR-04 Core platform capabilities
 
 The platform must provide:
 
-- product catalog ingestion
+- product catalog ingestion and normalization
 - customer signal ingestion
 - event pipeline and session tracking
 - identity resolution across channels
@@ -138,20 +140,34 @@ The platform must provide:
 - recommendation delivery API
 - merchandising rule builder
 - campaign management support
-- recommendation widgets and surface integration support
+- recommendation widget and surface integration support
 - experimentation and A/B testing
 - analytics and insights
 - admin and merchandising interface
 - governance and controls
 - integrations with commerce, POS, marketing, and analytics systems
 
-## 6.5 RTW and CM support
+### BR-05 Recommendation quality and filtering
 
-### Ready-to-Wear
+The platform must generate recommendations that are:
+
+- style compatible across categories
+- appropriate for the relevant occasion or dress context when known
+- filtered for inventory and assortment availability before customer display
+- constrained by business rules, exclusions, and campaign priorities
+- able to degrade gracefully when optional context or identity signals are unavailable
+
+### BR-06 Hybrid recommendation sourcing
+
+The platform must support curated, rule-based, and AI-ranked recommendation strategies. Merchandising inputs and business rules must be allowed to shape candidate generation and ranking rather than existing only as post-hoc overrides.
+
+### BR-07 RTW and CM support
+
+#### Ready-to-Wear
 
 The platform must support standard product and outfit recommendations based on product relationships, style compatibility, personalization, and context.
 
-### Custom Made
+#### Custom Made
 
 The platform must support recommendation logic for:
 
@@ -162,7 +178,51 @@ The platform must support recommendation logic for:
 - premium option suggestion
 - compatibility with configured customer garments
 
-RTW and CM may share platform infrastructure but should not be forced into identical recommendation rules or user journeys.
+RTW and CM may share infrastructure, but they must not be forced into identical rules, workflows, or explanation patterns.
+
+### BR-08 Merchandising and operator controls
+
+Authorized operators must be able to:
+
+- create and manage curated looks
+- define compatibility rules and exclusions
+- prioritize or suppress campaigns and recommendation groups
+- inspect recommendation behavior and strategy attribution
+- adjust routine recommendation behavior without requiring engineering changes for every update
+
+### BR-09 Delivery API and activation
+
+The platform must expose recommendation outputs through a shared delivery API that can accept available context such as customer, product, surface, weather, and location. The API contract must support multiple response groups such as outfits, cross-sell, upsell, and style bundles.
+
+### BR-10 Experimentation and analytics
+
+The platform must:
+
+- capture recommendation impressions and downstream outcomes
+- support strategy and experience experimentation
+- attribute outcomes to recommendation sets, surfaces, and variants
+- allow operators to evaluate performance by recommendation type, surface, and customer segment
+
+### BR-11 Governance, privacy, and safety
+
+The platform must:
+
+- respect privacy, consent, and regional data-use rules
+- avoid exposing sensitive customer reasoning on customer-facing surfaces
+- preserve traceability to inputs, rules, and ranking strategy
+- maintain auditability for curated rules, overrides, and experiments
+
+### BR-12 Operational resilience
+
+The platform must handle:
+
+- uneven source data quality
+- partial context availability
+- low-confidence identity matches
+- upstream dependency delays or outages
+- channel-specific latency and payload constraints
+
+Recommendation requests should fall back to simpler safe strategies instead of failing entirely when non-critical enrichment is missing.
 
 ## 7. Workflow requirements
 
@@ -218,9 +278,21 @@ Authorized operators must be able to create curated looks, define rules, apply e
 - Full inventory planning or supply-chain forecasting
 - Downstream feature decomposition, board seeding, or implementation issue creation in this bootstrap run
 
-## 12. Open questions
+## 12. Recommended first release focus
 
-- Which surface should be the initial production launch target: PDP, cart, email, or clienteling?
+The first production release should prioritize:
+
+- RTW complete-look recommendations
+- PDP and cart as the initial customer-facing surfaces
+- shared recommendation contracts and telemetry
+- curated-look support plus deterministic compatibility rules
+- inventory-aware filtering and measurable attach-rate lift
+
+This focus is recommended because it offers a narrow but commercially meaningful launch path while building reusable platform foundations for later phases.
+
+## 13. Open questions
+
+- Should the first production launch start with PDP only, or launch PDP and cart together?
 - What level of real-time weather and location precision is operationally justified for launch?
 - Which customer signals are available at launch with reliable identity resolution and consent coverage?
 - How much merchandiser override should be hard override versus ranking influence?

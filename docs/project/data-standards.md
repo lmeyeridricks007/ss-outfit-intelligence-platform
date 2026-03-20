@@ -27,14 +27,28 @@ Source-system IDs from Shopify, OMS, POS, email, or other systems must be preser
 - Missing attributes must be explicit so recommendation logic can fall back safely instead of assuming defaults.
 - Inventory freshness and assortment availability should be tracked separately from long-lived descriptive attributes.
 
-## 3. Customer and identity standards
+## 3. Controlled vocabularies
+
+The platform should maintain controlled vocabularies for high-impact fields such as:
+
+- recommendation type
+- surface and channel
+- occasion
+- season
+- price tier
+- product category and subcategory
+- strategy source such as curated, rule-based, or AI-ranked
+
+Vocabulary changes should be versioned and communicated because they affect analytics, filtering, and downstream consumers.
+
+## 4. Customer and identity standards
 
 - Customer profiles must record source-system mappings and identity resolution confidence.
 - Anonymous and known-customer journeys should be supported without forcing unreliable identity merges.
 - Preference, purchase, browsing, and engagement signals should be timestamped and attributable to a source.
 - Sensitive data beyond recommendation need should not be ingested simply because it is available.
 
-## 4. Event standards
+## 5. Event standards
 
 Recommendation telemetry should capture at minimum:
 
@@ -56,27 +70,29 @@ Each outcome event should carry:
 - timestamp
 - customer or session reference as permitted
 
-## 5. Data quality and consistency rules
+When an operator modifies or overrides a recommendation outcome, the telemetry model should preserve that distinction so platform learning does not confuse manual intervention with pure algorithmic success.
+
+## 6. Data quality and consistency rules
 
 - Event timestamps must use a consistent timezone standard.
 - Important enumerations such as recommendation type, surface, and occasion should use controlled vocabularies.
 - Schema evolution must be versioned and documented.
 - Upstream nulls, stale attributes, or conflicting IDs must be handled explicitly, not silently overwritten.
 
-## 6. Privacy and governance
+## 7. Privacy and governance
 
 - Personalization data use must respect consent, opt-out, and region-specific rules.
 - Customer-facing experiences should not reveal sensitive inferred attributes or private reasoning.
 - Access to raw customer-level data should follow least-privilege principles.
 - Governance decisions that affect ranking behavior or data use should be auditable.
 
-## 7. Auditability and lineage
+## 8. Auditability and lineage
 
 - Recommendation outputs must be traceable to the data and configuration used to generate them.
 - Curated looks, rules, and model versions should be versioned or otherwise attributable.
 - Operators should be able to understand whether a recommendation was primarily curated, rule-based, or AI-ranked.
 
-## 8. Freshness expectations
+## 9. Freshness expectations
 
 - Inventory and critical assortment signals should refresh frequently enough to avoid recommending unavailable items on customer-facing surfaces.
 - Product taxonomy and descriptive attributes may refresh on a slower cadence, but changes that affect compatibility should be propagated predictably.
