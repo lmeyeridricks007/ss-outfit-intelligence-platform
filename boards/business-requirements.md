@@ -1,0 +1,5 @@
+# Business requirements board
+
+| BR ID | Feature | Status | Owner | Reviewer | Approval Mode | Trigger Source | Inputs | Output | Exit Criteria | Notes | Promotes To |
+|-------|---------|--------|-------|----------|---------------|----------------|--------|--------|---------------|-------|-------------|
+| BR-006 | Customer signal usage | IN_PROGRESS |  |  | HUMAN_REQUIRED | GitHub issue #55; `docs/project/business-requirements.md` (BR-6); `docs/project/goals.md`; `docs/project/personas.md`; `docs/project/data-standards.md`; `docs/project/roadmap.md` | Customer behavior and history signals; personalization scope; consent and governance constraints | `docs/project/br/br-006-customer-signal-usage.md` | Lists permitted customer signals, usage boundaries, privacy and consent constraints, and measurable personalization outcomes | Trigger: issue-created automation. Drafting BR artifact on `br/issue-55`. Approval mode defaults to `HUMAN_REQUIRED` until explicitly changed. | TBD after BR acceptance |
