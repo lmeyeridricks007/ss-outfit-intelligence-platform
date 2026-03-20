@@ -5,7 +5,7 @@
 - BR ID: BR-011
 - GitHub issue: #60
 - Stage: workflow:br
-- Status: Draft for PR
+- Status: In PR
 - Trigger: issue-created automation
 - Parent requirement: `docs/project/business-requirements.md` BR-11
 - Source artifacts:
