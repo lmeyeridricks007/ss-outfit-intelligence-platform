@@ -97,7 +97,7 @@ When done, leave a concise issue response that includes:
 - any docs that were skipped and why
 - branch name
 - PR link if available
-- notable assumptions or open questions
+- notable assumptions or open questions  
 
 ## Order of operations
 
