@@ -1,0 +1,5 @@
+# Business requirements board
+
+| BR ID | Feature | Status | Owner | Reviewer | Approval Mode | Trigger Source | Inputs | Output | Exit Criteria | Notes | Promotes To |
+|-------|---------|--------|-------|----------|---------------|----------------|--------|--------|---------------|-------|-------------|
+| BR-002 | Multi-type recommendation support | In Progress |  |  | HUMAN_REQUIRED | GitHub issue #51; docs/project/business-requirements.md; docs/project/product-overview.md; docs/project/goals.md; docs/project/roadmap.md | Recommendation type taxonomy; phased rollout priorities; commercial goals | docs/project/br/br-002-multi-type-recommendation-support.md | Documents supported recommendation types, phase sequencing, boundaries, and metrics for outfit, cross-sell, upsell, contextual, personal, and style-bundle recommendations | Trigger: issue-created automation. Autonomous run on `br/issue-51`. Board file created because none existed in repo. Occasion-based modeling remains a non-blocking open decision captured in the BR artifact. | FEAT-TBD |
