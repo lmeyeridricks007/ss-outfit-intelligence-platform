@@ -34,8 +34,9 @@ For each BR row in `boards/business-requirements.md`:
 2. **If not exists, create issue**:
    - **Title**: `BR-001: <Feature Name>` (use BR ID and feature name from the row)
    - **Body**: Use the template below
-   - **Labels**: `feature`, `workflow:br`, and optionally `phase:<n>` if determinable from roadmap
+   - **Labels**: **REQUIRED** - You MUST add these labels: `feature`, `workflow:br`, and optionally `phase:<n>` if determinable from roadmap
    - **Stage label**: `workflow:br`
+   - **VERIFY**: After creating the issue, verify that the labels were successfully applied. If labels were not applied (e.g., due to permissions), note this in your output so the orchestrator can add them.
 
 ### Feature Issues
 
@@ -126,8 +127,14 @@ This feature spec is complete when: (exit criteria from board row)
 
 To create issues, you can use:
 - GitHub CLI: `gh issue create --title "..." --body "..." --label "feature,workflow:br"`
-- GitHub API: `POST /repos/{owner}/{repo}/issues` with JSON payload
+- GitHub API: `POST /repos/{owner}/{repo}/issues` with JSON payload including `labels` array
 - Or use any available GitHub integration in your environment
+
+**CRITICAL**: Labels are REQUIRED for the orchestrator to pick up issues. Always include labels when creating issues:
+- For BR issues: `feature`, `workflow:br` (and optionally `phase:<n>`)
+- For Feature issues: `feature`, `workflow:feature-spec` (and optionally `phase:<n>`)
+
+**If you cannot add labels due to permissions**, document which issues were created without labels so they can be fixed manually or by the orchestrator.
 
 ## Important Notes
 
