@@ -23,5 +23,5 @@ Cross-reference for major platform capabilities, priorities, dependencies, artif
 - **P0** items are prerequisites for safe Phase 1 ecommerce launch quality (valid products + consistent delivery contract + measurement).
 - **Recommendation types** (outfit, cross-sell, upsell, style bundle, occasion-based, contextual, personal) are defined in BR-002 and `docs/project/glossary.md`.
 - For orchestration dependencies, see `docs/project/architecture-overview.md`.
-- Feature IDs are **not assigned yet** in this repository stage. If downstream boards or architecture artifacts require `FEAT-###` identifiers, assign them once in the board or project-operations layer and update this index plus `open-decisions.md` decision `DEC-013`.
+- Review artifacts in this repository already reference stable `FEAT-###` identifiers for several feature-stage work items. Keep any newly introduced FEAT IDs aligned with the board or project-operations layer, and reconcile this index plus `open-decisions.md` decision `DEC-013` if portfolio-wide ID mapping is formalized here.
 - Cross-cutting unresolved items are consolidated in `open-decisions.md` rather than repeated only in each feature file.
