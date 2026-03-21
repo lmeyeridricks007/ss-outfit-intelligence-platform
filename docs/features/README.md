@@ -50,6 +50,7 @@ When BRs and feature specs diverge, **BRs and `business-requirements.md` win** u
 - Portfolio review: `deep-dives/reviews/feature-spec-portfolio-review.md` (rubric-scored review artifact for the feature portfolio; originally produced from the issue #167 batch and later refined in the dedicated FEAT-008 review pass).
 - Portfolio audit: `audits/feature-spec-portfolio-audit.md` (depth, implementability, cross-module clarity).
 - Portfolio open decisions: `open-decisions.md` (deduplicated unresolved product, architecture, analytics, and governance choices referenced by the feature specs, with owners and downstream impact).
+- Open decisions review and audit: `deep-dives/reviews/open-decisions-review.md` and `audits/open-decisions-audit.md` (dedicated FEAT-013 refinement evidence for the portfolio decision register).
 
 ## File naming
 
