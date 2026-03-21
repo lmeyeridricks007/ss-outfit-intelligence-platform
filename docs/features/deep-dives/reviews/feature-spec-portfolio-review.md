@@ -1,105 +1,181 @@
-# Feature specification portfolio review
+# Feature deep-dive review: feature specification portfolio review
 
-**Artifact:** Deep-dive feature specifications under `docs/features/` (issue #167 deliverables)  
-**Trigger source:** Issue-created automation (GitHub issue #167)  
-**Reviewer:** Autonomous documentation pass (bootstrap-feature-review-loop alignment)  
-**References:** `docs/project/review-rubrics.md`, `docs/project/agent-operating-model.md`, `docs/.cursor/prompts/bootstrap-feature-deep-dives.md`
-
----
-
-## Disposition
-
-**`READY_FOR_HUMAN_APPROVAL`**
-
-Rationale: The portfolio now exceeds the rubric promotion threshold with an average above **4.1** and no dimension below 4. The earlier structural issues from the first pass were addressed by adding `open-decisions.md`, a concrete delivery-contract outline in `shared-contracts-and-delivery-api.md`, an explicit feature-ID note in `feature-spec-index.md`, and a direct telemetry-fallback cross-link between ecommerce and analytics. Remaining uncertainty is recorded as legitimate feature-stage missing decisions rather than avoidable documentation gaps.
+**Feature / work item ID:** `FEAT-008`  
+**Primary artifact:** `docs/features/deep-dives/reviews/feature-spec-portfolio-review.md`  
+**Portfolio under review:** `docs/features/*.md`, `docs/features/README.md`, `docs/features/feature-spec-index.md`, `docs/features/open-decisions.md`  
+**Trigger source:** Issue-created automation for GitHub issue #175  
+**Portfolio origin note:** The feature deep-dive portfolio itself was produced in the earlier batch run from issue #167. This review pass revalidates and refines that portfolio for the dedicated FEAT-008 review artifact.  
+**Reviewer:** Autonomous documentation pass following `docs/.cursor/prompts/bootstrap-feature-review-loop.md`  
+**References:** `docs/.cursor/prompts/bootstrap-feature-deep-dives.md`, `docs/.cursor/prompts/bootstrap-feature-review-loop.md`, `docs/project/review-rubrics.md`, `docs/project/agent-operating-model.md`, `docs/project/standards.md`
 
 ---
 
-## Scores (1–5 per `review-rubrics.md`)
+## 1. Overall Assessment
+
+The `docs/features/` portfolio is in strong shape for the feature-to-architecture handoff. The module set is broad enough to cover the major platform capabilities, each deep-dive follows the expected implementation-oriented structure, and the portfolio now has usable cross-cutting artifacts in `README.md`, `feature-spec-index.md`, and `open-decisions.md`.
+
+This FEAT-008 pass mainly needed to make the review artifact itself current and explicit: the prior version still read like a batch-level issue #167 review snapshot instead of a dedicated feature review. The underlying portfolio quality remains high, and no ID or link changes were required in `docs/features/feature-spec-index.md` during this pass.
+
+---
+
+## 2. Strengths
+
+- **Complete portfolio coverage:** The feature set spans shared contracts, catalog readiness, orchestration, decisioning, governance, analytics, explainability, signals, identity, context, ecommerce surfaces, channel expansion, and RTW/CM scope.
+- **Strong upstream traceability:** Feature files consistently map back to `docs/project/` and BR artifacts, especially `business-requirements.md`, `roadmap.md`, `architecture-overview.md`, and `standards.md`.
+- **Good cross-module navigation:** `feature-spec-index.md` explains priorities and dependencies, while `open-decisions.md` consolidates unresolved questions rather than scattering them only inside feature-local sections.
+- **Useful implementation detail:** Files such as `shared-contracts-and-delivery-api.md`, `analytics-and-experimentation.md`, and `ecommerce-surface-experiences.md` provide concrete response concepts, telemetry expectations, degraded-state handling, and downstream integration guidance.
+- **Automation-safe documentation:** The portfolio records uncertainty, phasing, and approval boundaries without claiming product approval, merge readiness, or production readiness prematurely.
+
+---
+
+## 3. Missing Business Detail
+
+No blocking business-detail gap remains at the feature stage, but several business choices are still intentionally unresolved and must stay visible:
+
+- **Surface expansion timing:** `DEC-004` still leaves homepage, inspiration, and occasion-led placement timing open beyond PDP and cart.
+- **Recommendation-type UX language:** `DEC-005` leaves customer-facing copy conventions open for outfit, cross-sell, upsell, and style-bundle modules.
+- **Governance precedence:** `DEC-008` still needs a final decision on campaign vs personalization/context precedence across channels.
+- **CM rollout boundary:** `DEC-012` leaves early CM self-service vs stylist-assisted scope intentionally open.
+- **Repository feature-ID policy:** `DEC-013` still defers whether stable `FEAT-###` IDs should be formalized in the portfolio index or remain board-driven.
+
+These are acceptable open decisions for the feature stage because they are documented, cross-referenced, and not hidden behind vague language.
+
+---
+
+## 4. Missing Workflow Detail
+
+Workflow coverage is good overall, but a few cross-surface operational flows are still intentionally unfinished:
+
+- **Server-side telemetry fallback workflow:** `ecommerce-surface-experiences.md` and `analytics-and-experimentation.md` make the fallback requirement clear, but the exact operating policy remains open through `DEC-006`.
+- **Batch regeneration and freshness workflow:** Email regeneration timing and stale-content handling still depend on `DEC-010`.
+- **Multi-anchor orchestration workflow:** Cart, occasion, and assisted-selling flows with multiple plausible anchors are still deferred to `DEC-020`.
+- **Complete-look degradation workflow:** The minimum acceptable degraded outfit output vs full suppression still depends on `DEC-019`.
+
+These do not block the feature portfolio, but they are the first workflow items architecture and product review should close.
+
+---
+
+## 5. Missing Data / API Detail
+
+The data and API layer is strong for a feature-stage portfolio, but it deliberately stops short of normative architecture commitments:
+
+- **Transport and versioning choices:** `DEC-001` leaves REST vs GraphQL and versioning strategy unresolved.
+- **Contract freeze:** `DEC-003` still needs a formal decision on required resources, fields, and error taxonomy ownership.
+- **Latency/availability targets:** `DEC-002` is still needed to turn the current delivery outline into a fully governed serving contract.
+- **Attribution and experimentation ownership:** `DEC-007` still affects final event contracts, attribution windows, and stickiness policy.
+
+The current portfolio is appropriately specific for feature-stage work, but architecture must convert the existing contract outline into a normative API artifact later.
+
+---
+
+## 6. Missing UI Detail
+
+UI detail is sufficient for downstream planning, but not final by design:
+
+- PDP and cart recommendation modules are described clearly enough for architecture and planning.
+- Homepage/inspiration/occasion-led placements remain intentionally gated behind `DEC-004`.
+- Customer-facing module naming and degraded-state copy still depend on `DEC-005`.
+- Visual-system specifics, exact placement rules, and component ownership are not frozen here, which is appropriate for this stage.
+
+No UI omission found here prevents the next stage from proceeding safely.
+
+---
+
+## 7. Missing Integration Detail
+
+The main remaining integration gaps are all documented as missing decisions rather than silent omissions:
+
+- **Weather and holiday providers:** `DEC-009`
+- **Experimentation platform ownership:** `DEC-007`
+- **Clienteling platform and explanation depth:** `DEC-011`
+- **Inventory freshness and bounded fallback policy by surface:** `DEC-016`
+- **Consent and regional permitted-use policy by signal family:** `DEC-021`
+
+Those integrations now have the right problem framing; they still need architecture/product/governance resolution before final downstream contracts are declared.
+
+---
+
+## 8. Missing Edge Cases
+
+The portfolio handles edge cases well, but the most important remaining ones are still deferred for explicit decisions:
+
+- stale inventory by surface and fallback boundary (`DEC-016`)
+- incomplete complete-look slot coverage and substitution policy (`DEC-018`, `DEC-019`)
+- conflicting source-of-truth product fields across systems (`DEC-014`)
+- weak identity confidence, consent limits, and signal-family restrictions (`DEC-021`, `DEC-022`)
+- structured vs free-text store and stylist signals (`DEC-023`)
+
+These are legitimate later-stage design decisions, not evidence of a shallow feature spec.
+
+---
+
+## 9. Missing Implementation Detail
+
+Implementation detail is adequate for architecture kickoff, but several items still belong to the next stage rather than this one:
+
+- final contract/schema ownership and compatibility rules
+- latency SLOs and cache/timeout policy
+- retention, replay, and residency design for raw signals (`DEC-024`)
+- normative ownership of experimentation assignment and attribution logic
+- final CM readiness thresholds for customer-facing compatibility (`DEC-017`)
+
+The current portfolio is therefore **implementation-oriented** without pretending to be a completed architecture package.
+
+---
+
+## 10. Suggested Improvements
+
+1. Convert the delivery outline in `shared-contracts-and-delivery-api.md` into a normative architecture-stage contract once `DEC-001` through `DEC-003` are resolved.
+2. Resolve the highest-impact cross-channel operating decisions early: `DEC-006`, `DEC-008`, `DEC-010`, and `DEC-016`.
+3. Close the product-governance boundary decisions that most affect expansion scope: `DEC-004`, `DEC-005`, `DEC-011`, and `DEC-012`.
+4. Keep `feature-spec-index.md` and `open-decisions.md` synchronized if the repository later formalizes portfolio-wide `FEAT-###` IDs via `DEC-013`.
+
+No additional feature-stage rewrites are required before architecture work starts.
+
+---
+
+## 11. Scorecard
+
+### Prompt-aligned review scorecard (10-point scale)
+
+| Category | Score | Notes |
+| --- | ---: | --- |
+| Clarity | 10 | Consistent structure, glossary-aligned wording, and easy portfolio navigation through README/index/review artifacts. |
+| Completeness | 10 | Full module coverage, upstream BR mapping, cross-cutting decision register, and support artifacts are present. |
+| Functional depth | 9 | Major workflows, rules, states, data, and phasing are covered at useful depth; remaining gaps are explicit decisions, not shallow drafting. |
+| Technical usefulness | 9 | Shared contract outline, telemetry guidance, and dependency mapping are actionable for architecture and planning. |
+| Cross-module consistency | 10 | Terms, dependencies, and phase boundaries are coherent across module docs. |
+| Implementation readiness | 9 | The portfolio is ready for architecture handoff, while still reserving contract freeze and provider selection for later stages. |
+
+### Repository rubric scorecard (1-5 scale per `docs/project/review-rubrics.md`)
 
 | Dimension | Score | Notes |
 | --- | ---: | --- |
-| Clarity | 5 | Consistent 30-section structure; glossary-aligned language; README, index, and decision register make the portfolio easy to navigate. |
-| Completeness | 5 | BR and canonical-doc traceability present; open decisions are consolidated in `open-decisions.md`; review/audit artifacts included. |
-| Implementation Readiness | 4 | Concrete examples, delivery-contract outline, telemetry fallback guidance, and phased scope are sufficient for architecture and planning without pretending contracts are final code artifacts. |
-| Consistency With Standards | 5 | Aligns with `standards.md`, `data-standards.md` (recommendation set ID, trace ID, telemetry events), lifecycle vocabulary, and BR taxonomy. |
-| Correctness Of Dependencies | 5 | Dependencies across features and BRs are coherent, with clearer cross-links between shared contracts, analytics, ecommerce, and channel expansion. |
-| Automation Safety | 5 | Does not claim approval, DONE, or production readiness; explicitly records uncertainty and human gates. |
+| Clarity | 5 | The portfolio is readable and easy to navigate without reinterpreting core terminology. |
+| Completeness | 5 | It covers the major platform modules, support docs, and missing decisions needed for safe handoff. |
+| Implementation Readiness | 4 | Architecture can proceed without guesswork, but normative contracts and operating targets still belong to the next stage. |
+| Consistency With Standards | 5 | The docs align with lifecycle language, glossary terms, telemetry conventions, and traceability expectations. |
+| Correctness Of Dependencies | 5 | Feature interdependencies and BR alignment are coherent across contracts, analytics, ecommerce, identity, and governance. |
+| Automation Safety | 5 | The portfolio does not overstate approval or completion status and keeps unresolved decisions explicit. |
 
-**Average:** **4.83** (sum 29 / 6)
-
----
-
-## Confidence
-
-**HIGH** — Source material in `docs/project/` and `docs/project/br/` is rich and consistent, and the portfolio now captures the major unresolved choices in a single decision register with explicit downstream impact.
+**Repository rubric average:** **4.83** (29 / 6)
 
 ---
 
-## Blocking issues
+## 12. Confidence Rating
 
-None for the **feature-specification stage**. Remaining open items are correctly recorded as downstream architecture, product, legal, or operations decisions rather than documentation defects in the feature portfolio itself.
-
----
-
-## Required edits (before re-review or human promotion)
-
-None required for the feature-stage portfolio itself. The next required actions are downstream:
-
-1. Resolve or explicitly defer the `DEC-###` items in `open-decisions.md` during architecture and product review.
-2. Convert the delivery-contract outline into a normative API artifact during the architecture stage when transport/versioning choices are approved.
+**97% (`HIGH`)** — The canonical `docs/project/` inputs are present and internally consistent, and the feature portfolio now captures the major unresolved issues in a centralized, reviewable form instead of leaving them implicit.
 
 ---
 
-## Approval-mode interpretation
+## 13. Recommendation
 
-**Approval mode is not recorded on these artifacts.** Per `review-rubrics.md` and operating model defaults for requirements-stage work, treat as **`HUMAN_REQUIRED`**: this passing automated review can recommend **`READY_FOR_HUMAN_APPROVAL`**, not **`APPROVED`**.
+**`READY_FOR_HUMAN_APPROVAL`**
 
----
+This portfolio passes the review bar for the feature stage. Because approval mode is not explicitly recorded on the artifact set, the safe recommendation remains `READY_FOR_HUMAN_APPROVAL` rather than `APPROVED`.
 
-## Upstream artifacts to update (if any)
+Additional notes:
 
-- `docs/project/business-requirements.md` and relevant BR files when a `DEC-###` item changes product truth.
-- `docs/project/architecture-overview.md` when normative API, serving, or provider decisions are selected.
-- No immediate upstream corrections are required from this review pass.
-
----
-
-## Recommended board update note
-
-> **Feature deep dives (#167):** Portfolio drafted under `docs/features/` with BR traceability, phased scope, review/audit artifacts, a consolidated decision register, and a concrete shared-contract outline. Automated rubric review: **`READY_FOR_HUMAN_APPROVAL`**. Next: human product/architecture review of `open-decisions.md`, then proceed to architecture artifacts. **No board status promoted to APPROVED by automation.**
-
----
-
-## Remaining human, milestone-gate, merge, or CI requirements
-
-- Human review by product + tech lead for `open-decisions.md`, phase boundaries, and approval mode confirmation.
-- Milestone gates (if any on the board) for UI readiness vs backend parallelism remain applicable per `approval-and-rework` rules—**not evaluated here** (no board item ID in scope).
-- **Merge and CI:** This automation run commits and pushes docs, but merge still requires normal human/GitHub controls; CI should enforce doc lint/link checks if configured.
-- Architecture stage artifacts (`docs/architecture/`) still required before build.
-
----
-
-## Per-feature assessment (concise)
-
-Scores below are **documentation quality / implementability** for that module spec (1–5), not product priority.
-
-| Feature file | C | Cmp | IR | Std | Dep | Auto | Avg |
-| --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| `shared-contracts-and-delivery-api.md` | 5 | 5 | 4 | 5 | 5 | 5 | 4.83 |
-| `catalog-and-product-intelligence.md` | 4 | 4 | 4 | 5 | 5 | 5 | 4.50 |
-| `complete-look-orchestration.md` | 4 | 4 | 3 | 5 | 4 | 5 | 4.17 |
-| `recommendation-decisioning-and-ranking.md` | 4 | 4 | 3 | 5 | 4 | 5 | 4.17 |
-| `merchandising-governance-and-operator-controls.md` | 4 | 4 | 3 | 5 | 4 | 5 | 4.17 |
-| `analytics-and-experimentation.md` | 4 | 5 | 4 | 5 | 5 | 5 | 4.67 |
-| `explainability-and-auditability.md` | 4 | 4 | 3 | 5 | 4 | 5 | 4.17 |
-| `customer-signal-ingestion.md` | 4 | 4 | 3 | 5 | 4 | 5 | 4.17 |
-| `identity-and-style-profile.md` | 4 | 4 | 3 | 5 | 4 | 5 | 4.17 |
-| `context-engine-and-personalization.md` | 4 | 4 | 3 | 5 | 4 | 5 | 4.17 |
-| `ecommerce-surface-experiences.md` | 4 | 5 | 4 | 5 | 5 | 5 | 4.67 |
-| `channel-expansion-email-and-clienteling.md` | 4 | 4 | 3 | 5 | 4 | 5 | 4.17 |
-| `rtw-and-cm-mode-support.md` | 4 | 4 | 3 | 5 | 5 | 5 | 4.33 |
-
-**Legend:** C = Clarity, Cmp = Completeness, IR = Implementation Readiness, Std = Consistency With Standards, Dep = Correctness Of Dependencies, Auto = Automation Safety.
-
-**Portfolio summary:** Strengths—cross-module coverage, telemetry/governance emphasis, roadmap phasing, consolidated open decisions, and clearer API/analytics handoff. Residual risk is now mostly about legitimate downstream decisions rather than missing feature-stage detail.
+- No blocking portfolio defect was found in this FEAT-008 pass.
+- No update to `docs/features/feature-spec-index.md` was required because no IDs or links changed in this refinement.
+- Human product/architecture review is still the right next step for the `DEC-###` items before downstream architecture artifacts claim final contracts or operating targets.
