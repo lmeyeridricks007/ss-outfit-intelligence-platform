@@ -12,9 +12,10 @@ Canonical upstream context lives in:
 ## How to use these specs
 
 1. **Start from the index** — `feature-spec-index.md` lists every feature file, priority, dependencies, and BR mapping.
-2. **Read the relevant feature file** when scoping architecture (`docs/architecture/`), implementation plans (`docs/implementation/`), or surface-specific build work.
-3. **Preserve traceability** — Each feature file cites upstream BR IDs and project docs; when you change product truth in `docs/project/` or BR artifacts, update affected feature specs or record explicit deferrals.
-4. **Treat missing decisions as first-class** — Specs call out unresolved business or technical choices; do not silently invent decisions in downstream artifacts without updating upstream docs.
+2. **Use the capability breakdown when you need finer scope** — `feature-index.md` and `sub-features/README.md` map each feature to its generated sub-feature capability specs under `docs/features/sub-features/`.
+3. **Read the relevant feature file** when scoping architecture (`docs/architecture/`), implementation plans (`docs/implementation/`), or surface-specific build work.
+4. **Preserve traceability** — Each feature file cites upstream BR IDs and project docs; sub-feature specs cite their parent feature plus open decisions. When you change product truth in `docs/project/` or BR artifacts, update affected feature and sub-feature specs or record explicit deferrals.
+5. **Treat missing decisions as first-class** — Specs call out unresolved business or technical choices; do not silently invent decisions in downstream artifacts without updating upstream docs.
 
 ## Phase framing (roadmap alignment)
 
@@ -33,7 +34,8 @@ Each feature file’s **Suggested Implementation Phasing** section states Phase 
 ## Traceability expectations
 
 - **BR → feature:** `feature-spec-index.md` maps each file to one or more BR IDs.
-- **Feature → downstream:** Architecture and plans should reference feature filenames or stable feature names used in the index.
+- **Feature → sub-feature:** `feature-index.md` maps each parent feature to the capability files in `docs/features/sub-features/`.
+- **Feature / sub-feature → downstream:** Architecture and plans should reference feature filenames or stable feature names used in the index, plus sub-feature capability filenames when work is narrower than the full feature.
 - **Telemetry:** Recommendation **recommendation set ID**, **trace ID**, and event taxonomy follow `docs/project/data-standards.md`.
 - **Terminology:** Use `docs/project/glossary.md` (e.g. *look* vs *outfit*, recommendation *types*, RTW vs CM).
 - **Open decisions:** Cross-cutting unresolved items are consolidated in `open-decisions.md` so downstream stages can resolve them without scanning every feature file.
@@ -49,6 +51,9 @@ When BRs and feature specs diverge, **BRs and `business-requirements.md` win** u
 
 - Portfolio review: `deep-dives/reviews/feature-spec-portfolio-review.md` (rubric-scored review artifact for the feature portfolio; originally produced from the issue #167 batch and later refined in the dedicated FEAT-008 review pass).
 - Portfolio audit: `audits/feature-spec-portfolio-audit.md` (depth, implementability, cross-module clarity).
+- Sub-feature portfolio index: `feature-index.md` and `sub-features/README.md` (navigation for the capability-level breakdown generated from the feature deep-dives).
+- Sub-feature portfolio review: `deep-dives/reviews/sub-feature-capability-specifications-review.md` (rubric-scored review artifact for the capability-spec portfolio generated from issue #184).
+- Sub-feature portfolio audit: `sub-features/audits/sub-feature-capability-specifications-audit.md` (portfolio-level audit of the generated capability layer).
 - Portfolio open decisions: `open-decisions.md` (deduplicated unresolved product, architecture, analytics, and governance choices referenced by the feature specs, with owners and downstream impact).
 - Open decisions review and audit: `deep-dives/reviews/open-decisions-review.md` and `audits/open-decisions-audit.md` (dedicated FEAT-013 refinement evidence for the portfolio decision register).
 
