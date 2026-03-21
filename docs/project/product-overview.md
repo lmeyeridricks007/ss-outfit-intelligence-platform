@@ -27,6 +27,7 @@ The platform serves both Ready-to-Wear and Custom Made scenarios while recognizi
 - Style inspiration and look-builder pages
 - Email campaigns
 - In-store clienteling interfaces
+- Admin and merchandising interfaces
 - Future mobile and API-driven experiences
 
 ## Major user journeys
@@ -64,6 +65,7 @@ The platform serves both Ready-to-Wear and Custom Made scenarios while recognizi
 - Customer profile and segmentation
 - Intent and context interpretation
 - Look and compatibility graph management
+- Campaign management and recommendation governance
 - Recommendation candidate generation
 - Business rule application and merchandising overrides
 - AI ranking and result assembly
@@ -78,6 +80,7 @@ The platform serves both Ready-to-Wear and Custom Made scenarios while recognizi
 - Outfit graph and curated look model
 - Recommendation engine
 - Merchandising rule builder and campaign controls
+- Admin and merchandising interfaces for curation, approvals, and analytics
 - Delivery API and channel adapters
 - Analytics, experimentation, and insights
 - Governance, auditability, and operational controls
@@ -87,7 +90,7 @@ The platform serves both Ready-to-Wear and Custom Made scenarios while recognizi
 ### In scope at product level
 - Recommendation generation and delivery
 - Multi-channel consumption of recommendation outputs
-- Recommendation governance, merchandising controls, and analytics
+- Recommendation governance, merchandising controls, campaign management, and analytics
 - RTW and CM recommendation logic where it affects outfit building and compatibility
 
 ### Out of scope at product level

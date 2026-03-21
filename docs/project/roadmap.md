@@ -85,6 +85,7 @@ Turn the recommendation engine into an operational platform that internal teams 
 ### Recommended scope
 - Support campaign-aware recommendation selection
 - Expose reusable recommendation sets to email and in-store clienteling interfaces
+- Introduce the first admin and merchandising interface workflows for curation, approvals, and performance review
 - Improve internal observability and override flows
 
 ### Dependencies

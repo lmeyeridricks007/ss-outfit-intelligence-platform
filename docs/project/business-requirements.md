@@ -9,12 +9,12 @@ Define the initial business requirements for AI Outfit Intelligence Platform as 
 ### 2.1 In scope
 - Recommend complete looks rather than only individual products.
 - Support recommendation types: outfit, cross-sell, upsell, curated style bundle, occasion-based, contextual, and personal recommendations.
-- Support recommendation delivery to PDP, cart, homepage or web personalization, style inspiration pages, email, and in-store clienteling interfaces.
+- Support recommendation delivery to PDP, cart, homepage or web personalization, style inspiration pages, email, in-store clienteling interfaces, and internal admin or merchandising interfaces.
 - Ingest and use customer signals from commerce, browsing, engagement, loyalty, and store-related systems where available.
 - Ingest and use context signals including location, country, season, weather, holiday or event calendar, and useful device or session context.
 - Ingest and use product data including category, fabric, color, pattern, fit, season, occasion, style tags, price tier, inventory, imagery, and RTW or CM attributes.
 - Support both RTW and CM recommendation workflows.
-- Provide merchandising controls, compatibility rules, governance, analytics, and experimentation capabilities.
+- Provide merchandising controls, campaign management, compatibility rules, governance, analytics, and experimentation capabilities.
 - Expose recommendation outputs through an API suitable for multiple consumers.
 
 ### 2.2 Out of scope for this bootstrap layer
@@ -36,6 +36,7 @@ Define the initial business requirements for AI Outfit Intelligence Platform as 
 - Merchandisers curating looks, rules, and campaigns
 - Marketing teams activating personalized recommendations in email
 - Product, analytics, and optimization teams measuring effectiveness
+- Admin users operating merchandising, governance, and analytics workflows
 
 ## 4. Business value
 
@@ -75,7 +76,7 @@ The platform must incorporate relevant context such as location, country, weathe
 The platform must use product attributes and inventory-aware constraints so recommendations are stylistically coherent and operationally relevant.
 
 ### BR-9 Merchandising governance
-The platform must provide governance controls for curated looks, overrides, compatibility rules, campaign priorities, and recommendation eligibility.
+The platform must provide governance controls for curated looks, campaign management, overrides, compatibility rules, campaign priorities, and recommendation eligibility.
 
 ### BR-10 Analytics and experimentation
 The platform must capture telemetry and support experimentation so performance can be measured and recommendation logic improved over time.
@@ -92,6 +93,7 @@ The platform must support identity resolution and a customer profile capability 
 - ingest customer events and historical transactions
 - resolve identity and update customer profiles
 - ingest or author curated looks and compatibility rules
+- manage campaigns, approvals, overrides, and recommendation governance artifacts
 - interpret context and intent for the active journey
 - generate candidate recommendations from curated, graph-based, and retrieval logic
 - apply rules and eligibility constraints

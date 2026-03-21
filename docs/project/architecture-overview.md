@@ -43,6 +43,7 @@ Responsible for:
 - channel-specific payload shaping
 - widgets or integration contracts for web and internal consumers
 - campaign and clienteling activation paths
+- admin and merchandising interfaces for curation, review, approvals, and analytics
 - recommendation analytics, experimentation, and operational controls
 
 ## Major subsystems
@@ -85,6 +86,7 @@ Responsible for:
 ### Merchandising and governance services
 - Manage curated looks, rules, campaign priorities, overrides, and approvals
 - Maintain auditability for changes that affect recommendation behavior
+- Support admin-facing workflows for curation review, governance actions, and operational monitoring
 
 ### Analytics and experimentation
 - Capture recommendation exposure and outcome telemetry
@@ -113,6 +115,7 @@ Responsible for:
 - POS or clienteling systems
 - Weather and calendar data providers where adopted
 - Analytics and experimentation platforms
+- Internal admin or merchandising tools where authoring is separated from the core recommendation services
 
 ## Key technical boundaries
 
