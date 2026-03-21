@@ -1,0 +1,12 @@
+{
+  "id": "5eceb2f7-f316-4fdf-bdc9-4eac8e760e65",
+  "issueNumber": 104,
+  "repoOwner": "lmeyeridricks007",
+  "repoName": "ss-outfit-intelligence-platform",
+  "workflowType": "workflow:bootstrap",
+  "cursorAgentId": "bc-c9ef1893-b224-4ce6-9932-a4d6d5acc6bc",
+  "status": "WritingFiles",
+  "startedAt": "2026-03-21T10:36:16.441214+00:00",
+  "completedAt": "2026-03-21T10:38:42.490052+00:00",
+  "commitSha": null
+}
