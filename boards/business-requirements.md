@@ -1,6 +1,8 @@
 # Business requirements board
 
-Trigger: issue-created automation from GitHub issue #47 (`workflow:br-deep-dive`).
+Trigger: issue-created automation from GitHub issue #100 (`workflow:br-deep-dive`); board rows preserve the canonical BR set seeded in the earlier bootstrap run.
+
+Rerun notes: created missing BR issues BR-002 (#101) and BR-009 (#102). Required labels could not be applied by the current GitHub integration because issue updates returned `403 Resource not accessible by integration`.
 
 Status values follow the repo lifecycle model. Approval mode uses the repo standard; these bootstrap BR rows are seeded as `AUTO_APPROVE_ALLOWED` for the autonomous workflow milestone.
 
