@@ -1,0 +1,5 @@
+# Business requirements board
+
+| BR ID | Feature | Issue | Status | Owner | Reviewer | Approval Mode | Trigger Source | Inputs | Output | Exit Criteria | Notes | Promotes To |
+|-------|---------|-------|--------|-------|----------|---------------|----------------|--------|--------|---------------|-------|-------------|
+| BR-002 | Multi-type recommendation support | #76 | IN_PROGRESS |  |  | AUTO_APPROVE_ALLOWED | issue-created automation; `docs/project/business-requirements.md`; `docs/project/product-overview.md`; `docs/project/goals.md`; `docs/project/roadmap.md` | Recommendation types across outfit, cross-sell, upsell, style bundle, occasion-based, contextual, and personal modes; surface and channel expectations | `docs/project/br/br-002-multi-type-recommendation-support.md` | Defines recommendation-type taxonomy, usage boundaries, and rollout order needed for downstream feature specs and API contracts | Autonomous BR drafting on branch `br/issue-76`. Non-blocking follow-ups: style bundle API naming, personal-overlay confidence threshold, regional occasion taxonomy. | `boards/features.md` -> `FEAT-002` |
