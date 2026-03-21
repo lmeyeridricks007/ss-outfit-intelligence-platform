@@ -1,0 +1,5 @@
+# Business requirements board
+
+| BR ID | Feature | Status | Owner | Reviewer | Approval Mode | Trigger Source | Inputs | Output | Exit Criteria | Notes | Promotes To |
+|-------|---------|--------|-------|----------|---------------|----------------|--------|--------|---------------|-------|-------------|
+| BR-005 | Curated plus AI recommendation model | IN_PROGRESS |  |  | HUMAN_REQUIRED | Issue #79; issue-created automation; docs/project/business-requirements.md; docs/project/vision.md; docs/project/goals.md | Curated look model; rule-based compatibility; AI ranking goals; merchandising governance; docs/project/standards.md | docs/project/br/br-005-curated-plus-ai-recommendation-model.md | Explains how curated, rule-based, and AI-ranked sources blend, including business value, controls, and optimization boundaries. | Drafted in autonomous run. Board created in this run because `boards/business-requirements.md` was not present in the repo snapshot. Non-blocking follow-up: create downstream feature row after BR review/approval. | TBD |
