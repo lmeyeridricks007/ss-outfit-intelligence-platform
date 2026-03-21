@@ -19,5 +19,5 @@ Agreed feature specs for AI Outfit Intelligence Platform. Each row maps to a sin
 
 ## Cross-checks
 
-- Rows for specs **not yet authored** in `docs/features/` should be filled in when those files are added; descriptions and dependencies here should be reconciled with the eventual deep dives.
+- All 12 agreed feature specs are now authored in `docs/features/`; keep descriptions, priorities, and dependencies in this index reconciled with the deep dives as they evolve.
 - **BR-8** has no separate file under `docs/project/br/`; catalog/eligibility traceability relies on `business-requirements.md` and architecture/product docs (see `README.md`).

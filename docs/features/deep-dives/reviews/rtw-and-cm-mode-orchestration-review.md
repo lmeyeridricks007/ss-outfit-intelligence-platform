@@ -67,7 +67,7 @@ The specification faithfully reflects BR-004’s **shared foundation vs mode-spe
 
 ## 13. Recommendation
 
-**Disposition:** Recommend **`READY_FOR_HUMAN_APPROVAL`** for this **documentation milestone only**.  
+**Disposition:** **Pass for this internal documentation review pass.**  
 Adequate to guide phased CM enablement without pretending configuration or appointment integrations are solved; not a substitute for Phase 4 operational or legal sign-off.
 
 ---

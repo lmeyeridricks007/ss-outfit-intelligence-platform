@@ -119,6 +119,6 @@ The deep-dive articulates a coherent **decision trace model**, **provenance laye
 
 ## 13. Recommendation
 
-- **For this milestone only:** Recommend **`READY_FOR_HUMAN_APPROVAL`** (assuming `HUMAN_REQUIRED` on the parent board item) for accepting the explainability deep-dive as input to **technical architecture and internal tooling design**.
+- **Milestone outcome:** Internal review pass completed; the explainability deep-dive is suitable input to **technical architecture and internal tooling design** for the next stage.
 - **Not claimed:** finalized admin UI, legal sign-off on retention, or customer-facing explanation product launch.
 - **Residual risks:** trace latency vs richness trade-offs; PII redaction completeness; governance audit ↔ trace linkage correctness under high change volume.

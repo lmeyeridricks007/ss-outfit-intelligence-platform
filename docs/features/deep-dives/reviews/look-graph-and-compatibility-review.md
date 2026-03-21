@@ -67,7 +67,7 @@ The specification clearly bounds the **look graph**, **compatibility/exclusion**
 
 ## 13. Recommendation
 
-**Disposition:** Recommend **`READY_FOR_HUMAN_APPROVAL`** for this **documentation milestone only**.  
+**Disposition:** Passes this **documentation milestone review** as a strong input to downstream architecture and feature breakdown.  
 This pass certifies the deep-dive doc as a suitable input to downstream architecture and feature breakdown; it does **not** assert catalog integration readiness, schema freeze, or implementation sign-off.
 
 ---

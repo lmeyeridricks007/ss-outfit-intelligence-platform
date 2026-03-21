@@ -119,6 +119,6 @@ The deep-dive delivers an implementation-oriented framing for **telemetry, attri
 
 ## 13. Recommendation
 
-- **For this milestone only:** Recommend **`READY_FOR_HUMAN_APPROVAL`** (assuming `HUMAN_REQUIRED` on the parent board item) for accepting the feature deep-dive as input to **architecture and implementation planning**. The document is **fit for purpose** as a structured bridge from BR-010 to downstream technical artifacts.
+- **Milestone outcome:** This review pass finds the feature deep-dive **fit for purpose** as input to **architecture and implementation planning** for the feature-spec milestone.
 - **Not claimed:** implementation completion, analytics vendor selection, or production experiment operations approval.
 - **Residual risks:** attribution window and multi-module attribution decisions; cross-channel event equivalence; schema versioning discipline under concurrent surface rollout.
