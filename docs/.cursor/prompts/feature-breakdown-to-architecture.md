@@ -75,6 +75,25 @@ Update **`{{BOARD_PATH}}`** (typically `boards/technical-architecture.md`) for *
  - Read `boards/features.md` when it exists to find the corresponding feature row; **if the file is missing, create a minimal `boards/features.md`** (scaffold table + rows inferred from the issue and `docs/features/`) as part of this run — do **not** refuse to proceed only because the board was absent
  - **Output**: Path to the **canonical per-ARCH** file (e.g. `docs/project/architecture/ARCH-004-complete-look-orchestration.md`), not only a portfolio overview
 
+## Completion discipline (critical — autonomous run)
+
+This workflow is **fully autonomous**. Do **not** treat any of these as an acceptable stopping point:
+
+- “Environment ready”
+- “I’ve confirmed the gap…”
+- “Next I’m going to…” without immediately doing it
+- A plan or summary **without** new/edited files on disk
+
+You **must** in **this same run** (unless a hard tool error blocks you):
+
+1. **Write** every required `docs/project/architecture/ARCH-###-*.md` file (batch = all rows in scope — use tight but complete sections if long; do not defer to a follow-up).
+2. **Trim** the umbrella/portfolio doc to map + links + short shared context only (move detail into per-ARCH files).
+3. **Update** `docs/project/architecture/README.md`.
+4. **Rewire** `boards/technical-architecture.md` so each row’s **Output** points at the canonical per-ARCH path.
+5. **Commit and push** to **`{{BRANCH_NAME}}`**.
+
+If you run low on space, **prioritize**: create all per-ARCH files with minimum viable depth → board → push; then expand depth in a follow-up only if the platform forces a limit. **Do not** stop after narrative alone.
+
 ## Quality Rules
 - Do not stay conceptual; every component and flow should be implementation-oriented (names, contracts, failure modes).
 - Define dependencies and failure modes explicitly (timeouts, fallbacks, degradation).
@@ -112,4 +131,13 @@ Update `boards/technical-architecture.md` with architecture readiness, blockers 
 **Approval / milestone-gate notes:** [From feature item]
 
 **Board update:** Add/update row in `boards/technical-architecture.md`, status, Approval Mode, blockers.
+
+## Do Not
+
+- Create implementation-plan rows or issues
+- Create UI/backend/integration/QA issues
+- Wait for manual approval before committing
+- Use blocking statuses that require human intervention
+- Stop after “Environment ready”, gap confirmation, or intent-only narration — see **Completion discipline** above
+
 ```

@@ -20,7 +20,7 @@ When a GitHub issue with label `workflow:architecture` is opened, you need to:
 3. **Follow feature-breakdown-to-architecture.md**: Use that prompt for the detailed architecture generation process
 4. **Update the board**: Update `boards/technical-architecture.md` with the architecture item status and details
   - Read `boards/features.md` when it exists to find the corresponding feature row; **if the file is missing, create a minimal `boards/features.md`** (scaffold table + rows inferred from the issue and `docs/features/`) as part of this run — do **not** refuse to proceed only because the board was absent
-  
+
 ## Branch
 
 Use the branch name provided by the orchestrator (e.g., `arch/issue-42` or `arch/feat-005-recommendation-delivery-api`).
@@ -30,5 +30,6 @@ Use the branch name provided by the orchestrator (e.g., `arch/issue-42` or `arch
 - Create implementation-plan rows or issues
 - Create UI/backend/integration/QA issues
 - Wait for manual approval before committing
+- Stop after only confirming a “gap” or stating a plan — you must **write** per-ARCH files, **rewire** the board, **commit**, and **push** in this same autonomous run (see **Completion discipline** in `feature-breakdown-to-architecture.md`)
 
 Begin by reading `feature-breakdown-to-architecture.md` for the detailed process.
