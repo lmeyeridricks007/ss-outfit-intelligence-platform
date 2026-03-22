@@ -11,201 +11,311 @@
 
 ## 1. Purpose
 
-Gate recommendation-safe product exposure on inventory freshness and imagery readiness so customer-facing experiences do not promise products or looks that cannot be represented honestly.
+Ensure recommendation candidates are shown only when inventory and imagery evidence is trustworthy for the requesting surface, market, channel, and mode.
 
-The goal of this capability is to give architecture, planning, UI, backend, analytics, and governance work a bounded implementation module instead of leaving this behavior implicit inside the broader feature file.
+This capability protects customer trust by preventing recommendation modules from displaying products that are unsellable, stale, or visually unfit for the surface context.
 
 ## 2. Core Concept
 
-This capability sits under `Catalog and product intelligence` and owns one clear responsibility: gate recommendation-safe product exposure on inventory freshness and imagery readiness so customer-facing experiences do not promise products or looks that cannot be represented honestly.
+`Inventory And Imagery Gating For Surfaces` is a policy-evaluated gate between catalog truth and recommendation delivery:
 
-It should be implemented as a reusable platform module whose contracts remain consistent across channels and environments rather than as surface-specific one-off logic.
+`inventory + imagery evidence -> surface policy evaluation -> pass/degrade/suppress verdict -> recommendation-safe candidate projection`
+
+Key principle: readiness is scoped, not global. The same variant can be:
+
+- `PASS` on clienteling (operator-assisted) with partial imagery
+- `DEGRADED` on homepage if inventory freshness is stale
+- `SUPPRESSED` on PDP/cart if sellability is unknown or failed
 
 ## 3. User Problems Solved
 
-- Reduces ambiguity for teams implementing `Catalog and product intelligence` by isolating a single capability boundary.
-- Prevents downstream consumers from reinterpreting `Inventory And Imagery Gating For Surfaces` behavior differently on each surface or channel.
-- Keeps cross-cutting uncertainty explicit through open-decision references instead of forcing later stages to guess.
+- Prevents PDP/cart modules from surfacing products that cannot be purchased with confidence.
+- Avoids visual-quality regressions (wrong angle, missing hero, missing variant color) in customer-facing recommendation units.
+- Keeps ranking and personalization from accidentally amplifying low-trust candidates.
+- Gives operators clear, actionable reason codes rather than silent candidate drops.
+- Standardizes gating semantics across surfaces so teams do not create conflicting local logic.
 
 ## 4. Trigger Conditions
 
-- Inventory or imagery evidence changes for a product or variant.
-- A surface has stricter customer-facing evidence requirements than an operator tool.
-- Decisioning or delivery requests surface-safe candidate evidence.
+- `inventory.snapshot.updated` for a variant or SKU.
+- `inventory.sellability.changed` event (in stock, out of stock, unavailable, unknown).
+- `imagery.asset.published`, `imagery.asset.invalidated`, or quality reclassification.
+- Policy changes affecting thresholds by surface, category, or mode.
+- Recommendation projection rebuild or replay jobs.
+- Explicit eligibility checks from decisioning or delivery API workflows.
 
 ## 5. Inputs
 
-- inventory snapshots and freshness markers
-- imagery asset records and quality metadata
-- surface and channel policy
-- mode-specific readiness thresholds
-- manual emergency overrides
+- Variant-level inventory snapshot (`sellableState`, quantity bucket, captured timestamp, source).
+- Inventory freshness metadata (age, expected update cadence, source-health state).
+- Product/variant imagery metadata (asset role, quality state, published timestamp, color/variant match).
+- Surface context (`pdp`, `cart`, `homepage`, `email`, `clienteling`, `operator`).
+- Mode context (`RTW`, `CM`) and recommendation type (`outfit`, `cross-sell`, `upsell`, `style bundle`, `contextual`, `personal`).
+- Market/channel context and assortment eligibility from sibling capabilities.
+- Policy version and optional approved manual override records.
 
 ## 6. Outputs
 
-- surface-safe inventory and imagery verdicts
-- freshness and asset reason codes
-- product-level degraded markers
-- candidate gating updates for downstream services
+- `SurfaceEvidenceVerdict` for product/variant scope:
+  - `PASS`
+  - `DEGRADED`
+  - `SUPPRESSED`
+- Dimension status and reason codes:
+  - inventory (`PASS`, `STALE`, `UNKNOWN`, `FAIL`)
+  - imagery (`PASS`, `PARTIAL`, `UNKNOWN`, `FAIL`)
+- Replacement hints for candidate regeneration (when suppression is recoverable).
+- Projection update markers for downstream decisioning, delivery, and analytics.
 
 ## 7. Workflow / Lifecycle
 
-1. Read the latest inventory and imagery evidence for the scoped product or look member.
-2. Compare the evidence to surface- and mode-specific thresholds.
-3. Emit a pass, degraded, or suppressed verdict with clear reason codes.
-4. Update downstream projections used by ranking and delivery.
-5. Show operators when surface-safe evidence drops below threshold.
+1. Resolve canonical product + variant identifiers and current scope (surface, mode, market, channel).
+2. Load latest inventory evidence and imagery evidence with provenance.
+3. Apply precedence rules for conflicting source values (linked to `DEC-014`).
+4. Evaluate inventory freshness and sellability against surface policy (linked to `DEC-016`).
+5. Evaluate imagery role/quality completeness against surface policy (linked to `DEC-015`).
+6. Combine dimension outcomes into a verdict:
+   - hard-fail on strict surfaces (`pdp`, `cart`) where required evidence is missing/unknown/stale
+   - degraded outcome when policy allows bounded fallback (`homepage`, `email`, some clienteling flows)
+7. Persist versioned verdict and emit reason codes.
+8. Update candidate projections and invalidate stale read caches.
+9. Surface suppression/degradation diagnostics in operator tooling.
+
+Lifecycle states for this capability:
+
+`evaluated -> pass | degraded | suppressed -> re-evaluated (on new evidence/policy)`
 
 ## 8. Business Rules
 
-- Recommendation readiness must be computed from explicit policy, not inferred ad hoc by ranking or surfaces.
-- Unknown, stale, partial, and failed readiness states must remain distinct because they drive different degraded behaviors.
-- Mode-specific eligibility for `RTW` and `CM` must be explicit in product truth rather than reconstructed downstream.
-- This capability must stay aligned with `docs/features/catalog-and-product-intelligence.md` as the feature-stage source of truth.
-- Open decisions must remain explicit and must not be silently resolved in this spec: `DEC-014`, `DEC-015`, `DEC-016`, `DEC-017`.
-- Internal `look` semantics and customer-facing `outfit` semantics must remain distinct where grouped recommendation meaning matters.
+- Inventory and imagery gates run before ranking; ranking cannot override hard suppression.
+- Strict interactive ecommerce surfaces (`pdp`, `cart`) must treat `inventory=UNKNOWN|STALE|FAIL` as non-pass.
+- Customer-facing surfaces require minimum imagery role coverage (for example, hero image and variant-correct asset) per policy.
+- Operator-facing screens may allow degraded imagery views if explicitly configured, but must preserve warnings.
+- A product may pass imagery and fail inventory (or vice versa); reason codes must remain dimension-specific.
+- Curated `look` membership does not bypass hard inventory/imagery gates for customer-facing `outfit` output.
+- Manual overrides are time-bounded and audited; overrides cannot permanently bypass core safety semantics.
+- CM behavior must remain explicit: configuration-aware customer-facing recommendations require CM evidence minimums (`DEC-017`), even when imagery appears complete.
 
 ## 9. Configuration Model
 
-- `enabled` flag to turn the capability on or off per environment.
-- `policyVersion` reference so behavior stays traceable across changes.
-- `market`, `channel`, `surface`, and `mode` scoping keys where applicable.
-- Freshness windows and degraded-state thresholds for inventory or package reuse.
+Policy entities:
+
+- `SurfaceGatePolicy`
+  - `policyVersionId`
+  - `surface`
+  - `mode`
+  - `recommendationTypes`
+  - `inventoryRules`
+  - `imageryRules`
+  - `fallbackPolicy`
+- `InventoryFreshnessWindowPolicy`
+  - per-surface freshness max age
+  - stale grace behavior (`degrade` vs `suppress`)
+- `ImageryMinimumPolicy`
+  - required asset roles by category/surface
+  - quality thresholds and variant-match requirements
+- `EmergencyOverridePolicy`
+  - allowed roles, max duration, audit requirement
+
+Config requirements:
+
+- Versioned and immutable-at-runtime references for traceability.
+- Scoped by `market`, `channel`, `surface`, `mode`.
+- Backward-compatible rollout support for policy updates.
 
 ## 10. Data Model
 
 Primary entities:
 
-- InventorySnapshot
-- ImageryAsset
-- SurfaceEvidenceVerdict
-- FreshnessWindowPolicy
-- AssetQualificationRecord
+- `InventoryEvidenceSnapshot`
+  - `snapshotId`, `variantId`, `sellableState`, `inventoryBucket`, `capturedAt`, `sourceSystem`, `sourceVersion`
+- `ImageryEvidenceSnapshot`
+  - `snapshotId`, `entityId`, `assetRole`, `qualityState`, `variantMatchState`, `publishedAt`, `sourceSystem`
+- `SurfaceEvidenceVerdict`
+  - `verdictId`, `entityId`, `surface`, `mode`, `market`, `channel`, `inventoryStatus`, `imageryStatus`, `finalVerdict`, `reasonCodes`, `policyVersionId`, `evaluatedAt`
+- `OverrideRecord`
+  - `overrideId`, `scope`, `actorId`, `reason`, `effectiveFrom`, `effectiveTo`, `approvalContext`
 
-Recommended shared fields across the entities above:
-
-- stable canonical IDs and source references where applicable
-- createdAt / updatedAt timestamps
-- policy or schema version references
-- traceable reason codes for degraded, blocked, or overridden outcomes
-
-## 11. API Endpoints
-
-Illustrative feature-stage endpoints and operations:
-
-- GET /catalog/products/{canonicalProductId}/surface-readiness
-- POST /catalog/inventory/reconcile
-- POST /catalog/imagery/qualify
-
-These endpoints are intentionally illustrative. Final transport, schema normalization, and versioning details should follow the eventual architecture-stage resolution of the relevant `DEC-###` items.
-
-## 12. Events Produced
-
-- inventory.surface.gated
-- imagery.surface.gated
-
-## 13. Events Consumed
-
-- inventory.snapshot.updated
-- dam.asset.updated
-- surface.policy.updated
-
-## 14. Integrations
-
-- product information management and commerce data sources
-- inventory and order-management systems
-- digital asset management
-- merchandising governance and operator controls
-- recommendation decisioning and ranking
-- shared contracts and delivery API
-- explainability and auditability
-- inventory and order-management snapshots
-
-## 15. UI Components
-
-- catalog readiness table
-- suppression reason tags
-- feed health incidents list
-- eligibility projection cards
-
-If the capability is primarily backend-oriented, these components still matter for operator, support, or diagnostics surfaces that need to expose its state safely.
-
-## 16. UI Screens
-
-- catalog operations console
-- product readiness detail page
-- feed incident triage screen
-
-## 17. Permissions & Security
-
-- Restrict write operations to the service or operator role responsible for the capability.
-- Expose only role-safe fields to support, operator, and consumer views.
-- Keep audit fields on every state change that affects downstream recommendation behavior.
-
-## 18. Error Handling
-
-- Reject malformed requests or invalid references with structured validation errors and reason codes.
-- Distinguish degraded or partial success from hard failure whenever the capability can still produce a safe output.
-- Preserve traceability for failures so support and analytics can correlate them later.
-
-## 19. Edge Cases
-
-- Out-of-order upstream updates arrive and must not regress the effective state.
-- A downstream consumer uses an older snapshot or contract version while the capability advances.
-- Open decisions or policy changes alter behavior between stages and must remain traceable.
-
-## 20. Performance Considerations
-
-- Prefer projection-backed reads for request-time paths instead of recomputing from raw history.
-- Keep payloads, indexes, and cache invalidation aligned with the surfaces that consume the capability.
-- Track degraded-state rates so performance shortcuts do not silently erode recommendation quality.
-
-## 21. Observability
-
-- Emit metrics for throughput, failures, degraded outcomes, and stale-state usage.
-- Log stable identifiers such as `traceId`, `recommendationSetId`, snapshot IDs, or job IDs where the capability affects downstream recommendation behavior.
-- Publish structured reason codes so support, analytics, and audit tooling can bucket outcomes consistently.
-
-## 22. Example Scenarios
-
-### Scenario A: Typical happy-path execution
-
-1. A request or upstream change triggers `Inventory And Imagery Gating For Surfaces`.
-2. The capability reads the required inputs, applies its policy, and emits the bounded output described above.
-3. Downstream systems consume the result with stable identifiers, version references, and reason codes.
-
-### Illustrative payload
+Example verdict payload:
 
 ```json
 {
-  "subFeature": "inventory-and-imagery-gating-for-surfaces",
-  "feature": "catalog-and-product-intelligence",
-  "input": "inventory snapshots and freshness markers",
-  "output": "surface-safe inventory and imagery verdicts",
-  "traceId": "trace_example_001",
-  "recommendationSetId": "set_example_001"
+  "verdictId": "svg_01JQ0N8XRJ4SKY9M9NG7M2H8V1",
+  "entityId": "variant_12345_blue_48",
+  "surface": "pdp",
+  "mode": "RTW",
+  "market": "NL",
+  "channel": "web",
+  "inventoryStatus": "STALE",
+  "imageryStatus": "PASS",
+  "finalVerdict": "SUPPRESSED",
+  "reasonCodes": [
+    "inventory_freshness_exceeded_pdp_window"
+  ],
+  "policyVersionId": "surface_gate_v15",
+  "evaluatedAt": "2026-03-22T10:35:04Z"
 }
 ```
 
+## 11. API Endpoints
+
+Illustrative feature-stage contracts:
+
+- `GET /catalog/variants/{variantId}/surface-gate?surface=...&mode=...&market=...&channel=...`
+- `POST /catalog/surface-gates/evaluate`
+- `POST /catalog/surface-gates/recompute`
+- `GET /catalog/surface-gates/policies/{policyVersionId}`
+- `GET /catalog/surface-gates/suppressions?surface=...&reasonCode=...`
+
+Required response fields:
+
+- canonical IDs and scope fields
+- inventory/imagery statuses
+- `finalVerdict`
+- reason codes
+- policy version and evaluation timestamp
+
+## 12. Events Produced
+
+- `catalog.surface_gate.evaluated`
+- `catalog.surface_gate.degraded`
+- `catalog.surface_gate.suppressed`
+- `catalog.surface_gate.recovered`
+- `catalog.projection.invalidate_requested`
+
+## 13. Events Consumed
+
+- `inventory.snapshot.updated`
+- `inventory.sellability.changed`
+- `imagery.asset.published`
+- `imagery.asset.invalidated`
+- `catalog.policy.updated`
+- `catalog.readiness.rebuild.requested`
+- `governance.override.approved`
+
+## 14. Integrations
+
+- PIM and commerce systems for entity identity and lifecycle context.
+- OMS/inventory services for sellability and freshness evidence.
+- DAM/asset systems for imagery quality and variant match metadata.
+- Market/channel eligibility capability for final scope alignment.
+- Readiness evaluation/snapshot capability for consolidated product state.
+- Projection and feed-health tooling for downstream read performance.
+- Recommendation decisioning and ranking consumers.
+- Shared contracts and delivery API for surfaced verdict semantics.
+- Explainability/auditability pipeline for trace reconstruction.
+
+## 15. UI Components
+
+- Surface gate status badge (`PASS`, `DEGRADED`, `SUPPRESSED`).
+- Reason-code chips grouped by dimension (`inventory`, `imagery`).
+- Freshness countdown indicator for inventory evidence age.
+- Imagery coverage widget (required roles present/missing).
+- Override banner with expiry and actor audit metadata.
+
+## 16. UI Screens
+
+- Catalog operations console: suppression queues and trend views.
+- Product/variant readiness detail page: per-surface evidence and verdict history.
+- Feed incident triage view: correlates source incidents with gating impact.
+- Merchandising governance panel: override request/approval workflow.
+
+## 17. Permissions & Security
+
+- Service-level write access only for gating evaluator and authorized governance workflows.
+- Read access partitioned by role (operator vs support vs analytics).
+- Override creation restricted to approved governance roles; all changes auditable.
+- No customer PII required for this capability; keep payloads product-data scoped.
+- Ensure policy changes and overrides include actor, timestamp, and rationale.
+
+## 18. Error Handling
+
+- Validation errors for unknown IDs or invalid scope combinations return structured reason codes.
+- If inventory or imagery source is unavailable, emit explicit `UNKNOWN`/`STALE` status rather than silent success.
+- Recompute jobs must be idempotent and replay-safe to recover from partial failures.
+- Downstream consumers should receive a deterministic fallback verdict (`DEGRADED` or `SUPPRESSED`) when evaluation cannot confirm pass safety.
+
+## 19. Edge Cases
+
+- Inventory says sellable while freshness is beyond strict surface window.
+- Product-level imagery exists but variant-specific imagery is missing or mismatched.
+- Out-of-order source events arrive and attempt to overwrite newer evidence.
+- Cached decisioning results use stale verdict after a suppression update.
+- Category policy updates reclassify required imagery roles, causing broad suppression waves.
+- CM item has high-quality imagery but lacks required configuration compatibility proof (`DEC-017`).
+
+## 20. Performance Considerations
+
+- Use projection-backed reads for request-time gate lookups.
+- Support high-frequency inventory updates without full projection rebuilds.
+- Separate fast-path invalidation (inventory) from slower-path recomputation (imagery policy changes).
+- Keep verdict payload compact for low-latency downstream consumption.
+- Index by `variantId + surface + mode + market + channel` for hot read paths.
+
+## 21. Observability
+
+Required metrics:
+
+- evaluation throughput and latency by surface/mode
+- suppression/degraded/pass rates
+- top reason-code distribution
+- stale evidence percentage by source
+- recovery time from suppressed to pass
+
+Required logs/traces:
+
+- `traceId`, `recommendationSetId` (when applicable), `verdictId`, `policyVersionId`
+- source snapshot IDs and timestamps
+- override linkage when an override influenced output
+
+Alerting:
+
+- suppression spikes by category/surface
+- sustained stale inventory on strict surfaces
+- imagery-role coverage regressions on high-traffic categories
+
+## 22. Example Scenarios
+
+### Scenario A: PDP strict suppression on stale inventory
+
+1. Inventory update feed lags; latest variant snapshot exceeds PDP freshness window.
+2. Imagery remains valid.
+3. Gate returns `SUPPRESSED` with `inventory_freshness_exceeded_pdp_window`.
+4. Decisioning replaces candidate and logs trace context.
+
+### Scenario B: Homepage degraded due to partial imagery
+
+1. Product passes inventory checks.
+2. One optional imagery role is missing for homepage tile policy.
+3. Gate returns `DEGRADED` with `imagery_optional_role_missing_homepage`.
+4. Delivery still serves candidate but flags degraded context for analytics.
+
+### Scenario C: Clienteling allowed with warning
+
+1. Variant inventory is current; imagery is partial but acceptable for operator-assisted context.
+2. Gate returns `DEGRADED` (not suppressed) for `clienteling`.
+3. Operator UI shows warning and reason codes; no customer-facing overclaim.
+
 ## 23. Implementation Notes
 
-- Backend services should own the business logic and expose read-optimized contracts to downstream consumers.
-- Persist versioned records or snapshots rather than mutating the effective truth in place when the capability affects delivery or audit.
-- Use background jobs or stream consumers where the capability depends on ingestion, projections, or recomputation.
-- Prefer stable canonical IDs from `docs/project/data-standards.md` for products, customers, looks, rules, campaigns, experiments, and recommendation sets.
+- Implement evaluator as a deterministic policy engine with explicit rule ordering.
+- Persist immutable verdict snapshots to support replay and audit.
+- Use asynchronous projection updates plus fast invalidation events for strict surfaces.
+- Keep reason-code taxonomy stable and versioned to avoid analytics drift.
+- Align all entity IDs and telemetry fields to `docs/project/data-standards.md`.
 
-Specific implementation implications for this capability:
+Assumptions carried forward:
 
-- Backend services: add or extend a `inventory-and-imagery-gating-for-surfaces` service boundary under the `catalog-and-product-intelligence` domain.
-- Database tables or documents: persist the primary entities listed in the data model with versioning and audit fields.
-- Jobs or workers: add asynchronous processing where ingestion, recomputation, replay, or batch delivery is part of the lifecycle.
-- External APIs: integrate only through the upstream systems explicitly referenced in the parent feature dependencies and inputs.
-- Frontend or shared UI: expose only the UI components and screens listed above; do not create duplicate surface-specific semantics.
+- Surface strictness differs and must remain configurable (not hardcoded).
+- Customer trust takes precedence over short-term candidate volume on strict surfaces.
+- Open decisions `DEC-014` to `DEC-017` are unresolved and must remain explicit in architecture/planning.
 
 ## 24. Testing Requirements
 
-- Unit tests for state transitions, precedence rules, and reason-code assignment.
-- Contract tests for the capability's illustrative API shapes and event payloads.
-- Integration tests covering upstream dependency inputs and downstream consumer expectations.
-- Regression tests for degraded, empty, or blocked paths.
-- Traceability tests that verify stable identifiers and policy references propagate correctly.
+- Unit tests for rule precedence, verdict composition, and reason-code assignment.
+- Contract tests for API response shape and event payload schema.
+- Integration tests with inventory and DAM update streams.
+- Replay/backfill tests validating deterministic output for identical inputs.
+- Surface matrix tests (`pdp`, `cart`, `homepage`, `email`, `clienteling`) across `RTW` and `CM`.
+- Chaos/failure tests for stale or missing source feeds.
+- Override governance tests for approval, expiry, and audit trail correctness.
+- Performance tests for high-volume inventory churn and projection invalidation latency.
