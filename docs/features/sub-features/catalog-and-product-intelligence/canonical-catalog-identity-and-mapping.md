@@ -11,205 +11,339 @@
 
 ## 1. Purpose
 
-Maintain canonical product and variant identity with source-system mappings so recommendation workflows can reason about one stable product model across PIM, commerce, DAM, and compatibility sources.
+Provide one stable, recommendation-safe identity plane for products, variants, looks, and compatibility references across PIM, commerce, DAM, and curation sources.
 
-The goal of this capability is to give architecture, planning, UI, backend, analytics, and governance work a bounded implementation module instead of leaving this behavior implicit inside the broader feature file.
+This capability exists to prevent every downstream system from inventing its own product identity logic. It guarantees that recommendation decisioning, delivery, explainability, analytics, and operator tooling all refer to the same canonical entities and can reconstruct how each source record was mapped.
 
 ## 2. Core Concept
 
-This capability sits under `Catalog and product intelligence` and owns one clear responsibility: maintain canonical product and variant identity with source-system mappings so recommendation workflows can reason about one stable product model across pim, commerce, dam, and compatibility sources.
+Canonical catalog identity is an identity graph plus deterministic mapping policy:
 
-It should be implemented as a reusable platform module whose contracts remain consistent across channels and environments rather than as surface-specific one-off logic.
+`source record -> source normalization -> canonical match/create -> provenance + confidence -> canonical entity + mapping history`
+
+The module owns:
+
+- canonical IDs for product and variant entities
+- source-to-canonical mapping lineage
+- field-level provenance and conflict state
+- merge/split handling for wrongly linked entities
+
+The module does **not** own final readiness eligibility thresholds (DEC-015), freshness windows (DEC-016), or CM minimum readiness policy (DEC-017). It emits the normalized identity and evidence those capabilities depend on.
 
 ## 3. User Problems Solved
 
-- Reduces ambiguity for teams implementing `Catalog and product intelligence` by isolating a single capability boundary.
-- Prevents downstream consumers from reinterpreting `Canonical Catalog Identity And Mapping` behavior differently on each surface or channel.
-- Keeps cross-cutting uncertainty explicit through open-decision references instead of forcing later stages to guess.
+| User / stakeholder | Problem | Capability outcome |
+| --- | --- | --- |
+| Recommendation service owners | Candidate generation breaks when sources disagree on IDs | All candidate services resolve through one canonical product and variant keyspace |
+| Ecommerce and channel teams | Surface teams create local ID translation hacks | Shared API and events remove per-surface identity forks |
+| Merchandising operators | Cannot explain why one source update did not appear downstream | Mapping lineage and conflict queues show source precedence and unresolved discrepancies |
+| Analytics and experimentation | Metrics split across duplicate product identities | Canonical IDs make recommendation set, impression, and outcome joins reliable |
+| Explainability / support | Traces cannot reconstruct source truth at decision time | Mapping version and source lineage are queryable in trace context |
+| Architecture / governance | Upstream source precedence is implicit and brittle | Policy-versioned precedence and conflict handling are explicit (DEC-014) |
 
 ## 4. Trigger Conditions
 
-- A new or updated product feed arrives from an upstream system.
-- Two systems describe the same product with different identifiers or attribute shapes.
-- A downstream service requests stable recommendation-safe product IDs.
+- New product or variant payload from PIM, commerce, DAM, compatibility graph, or look-authoring source
+- Change to source identifiers, lifecycle state, or identity-critical attributes
+- New mapping policy version or precedence configuration rollout
+- Operator merge/split or conflict-resolution action
+- Replay/backfill run for source correction or incident recovery
+- Downstream request for canonical lookup by source ID
 
 ## 5. Inputs
 
-- PIM, commerce, DAM, and compatibility feed payloads
-- source-specific product and variant IDs
-- normalized attribute mappings
-- source precedence rules
-- mode and assortment metadata
+- Source payloads with product/variant identifiers and identity evidence
+- Source namespace metadata (`pim`, `commerce`, `dam`, `curation`, etc.)
+- Identity-critical attributes (brand, style code, season, mode, option dimensions, region where relevant)
+- Current mapping policy (`policyVersionId`) including precedence and matching strategy
+- Existing canonical entities and mapping history
+- Operator resolution actions for previously blocked conflicts
 
 ## 6. Outputs
 
-- canonical product and variant IDs
-- source-to-canonical mapping records
-- normalized recommendation-facing product attributes
-- mapping conflicts for operator review
+- `canonicalProductId` and `canonicalVariantId` for resolved records
+- Source mapping records with confidence, provenance, and validity windows
+- Conflict records where deterministic mapping cannot be safely completed
+- Mapping change events for downstream projections and cache invalidation
+- Queryable lineage model used by explainability, support, and governance workflows
 
 ## 7. Workflow / Lifecycle
 
-1. Ingest source-system product payloads and validate required identity fields.
-2. Resolve or create canonical product and variant records.
-3. Normalize product attributes needed by recommendation, governance, and delivery flows.
-4. Persist mapping lineage and flag unresolved source conflicts.
-5. Publish canonical product records for downstream readiness evaluation.
+1. **Ingest + normalize source identity**
+   - Validate source namespace and source-local IDs.
+   - Normalize identity-critical fields into canonical schema.
+2. **Attempt deterministic resolution**
+   - Resolve via existing active mapping first.
+   - If missing, evaluate match strategy (exact keys -> constrained heuristic -> conflict).
+3. **Create or link canonical entity**
+   - Create new canonical product/variant if no safe match exists.
+   - Link source record to canonical entity when confidence meets policy.
+4. **Persist lineage**
+   - Write mapping with `effectiveFrom/effectiveTo`, confidence, evidence, and `policyVersionId`.
+   - Store field-level provenance for identity-critical attributes.
+5. **Handle unresolved states**
+   - Emit conflict case when multiple possible matches or contradictory source evidence exists.
+   - Keep record in `PENDING_REVIEW` or `BLOCKED` instead of force-linking.
+6. **Publish downstream updates**
+   - Emit mapping events and trigger projection refresh.
+   - Expose canonical lookup and lineage APIs.
+
+### Lifecycle states (mapping record)
+
+`DISCOVERED -> LINKED_PENDING_VERIFICATION -> ACTIVE -> SUPERSEDED | CONFLICTED -> RETIRED`
 
 ## 8. Business Rules
 
-- Recommendation readiness must be computed from explicit policy, not inferred ad hoc by ranking or surfaces.
-- Unknown, stale, partial, and failed readiness states must remain distinct because they drive different degraded behaviors.
-- Mode-specific eligibility for `RTW` and `CM` must be explicit in product truth rather than reconstructed downstream.
-- This capability must stay aligned with `docs/features/catalog-and-product-intelligence.md` as the feature-stage source of truth.
-- Open decisions must remain explicit and must not be silently resolved in this spec: `DEC-014`, `DEC-015`, `DEC-016`, `DEC-017`.
-- Customer data usage must degrade safely when consent, identity confidence, or allowed-use scope is insufficient.
+- Canonical IDs are immutable once issued; corrections happen by remapping/superseding, not ID reuse.
+- One source ID in one namespace maps to at most one active canonical entity at a time.
+- Mapping must preserve temporal validity (`effectiveFrom`, `effectiveTo`) to support replay and trace reconstruction.
+- Field conflicts across sources must be explicit and auditable; never silently discard disagreement.
+- Source-of-truth precedence must be policy-driven and versioned; do not hard-code precedence in consumers (`DEC-014`).
+- RTW and CM mode identity must remain explicit. Similar style codes across modes are related but not implicitly identical.
+- Curated look membership and compatibility edges must reference canonical IDs, not raw source IDs.
+- Unknown identity confidence must default to safe behavior (conflict/pending) rather than speculative auto-merge.
+- This sub-feature cannot locally resolve DEC-015/016/017; it only provides identity/evidence inputs those decisions require.
 
 ## 9. Configuration Model
 
-- `enabled` flag to turn the capability on or off per environment.
-- `policyVersion` reference so behavior stays traceable across changes.
-- `market`, `channel`, `surface`, and `mode` scoping keys where applicable.
-- Identity-confidence, consent, and permitted-use thresholds.
-- Mode-specific minimum evidence and fallback rules.
+`IdentityMappingPolicy` should include:
+
+- `policyVersionId`
+- `sourcePrecedence` (ordered by field group and source namespace)
+- `matchStrategies` (exact keys, constrained fuzzy keys, disallowed heuristics)
+- `confidenceThresholds` (`AUTO_LINK`, `REVIEW_REQUIRED`, `REJECT`)
+- `modeSeparationRules` (`RTW`, `CM`, mixed-mode handling)
+- `mergeSplitPermissions` by role
+- `conflictEscalationSLA` and queue routing
+- `replayBehavior` for backfills and historical corrections
+
+All configuration updates must be versioned and auditable because mapping policy directly affects recommendation quality and traceability.
 
 ## 10. Data Model
 
-Primary entities:
+### Core entities
 
-- CanonicalProduct
-- CanonicalVariant
-- SourceMapping
-- AttributeNormalizationRecord
-- MappingConflict
+| Entity | Purpose | Required fields |
+| --- | --- | --- |
+| `CanonicalProduct` | Canonical parent identity | `canonicalProductId`, `mode`, `status`, `createdAt`, `updatedAt` |
+| `CanonicalVariant` | Sellable/configurable child identity | `canonicalVariantId`, `canonicalProductId`, option dimensions, `status` |
+| `SourceProductMapping` | Product-level source linkage | `sourceNamespace`, `sourceProductId`, `canonicalProductId`, `confidence`, `effectiveFrom`, `effectiveTo`, `policyVersionId` |
+| `SourceVariantMapping` | Variant-level source linkage | `sourceNamespace`, `sourceVariantId`, `canonicalVariantId`, `confidence`, validity window |
+| `IdentityEvidence` | Evidence used for linking decisions | key/value evidence set, source timestamps, normalization hash |
+| `MappingConflictCase` | Unresolved or risky link decision | `conflictId`, competing candidates, `reasonCode`, `state`, `assignedTo` |
+| `MappingChangeLog` | Append-only history for audit/replay | actor/system, action type, before/after references, timestamp |
 
-Recommended shared fields across the entities above:
-
-- stable canonical IDs and source references where applicable
-- createdAt / updatedAt timestamps
-- policy or schema version references
-- traceable reason codes for degraded, blocked, or overridden outcomes
-
-## 11. API Endpoints
-
-Illustrative feature-stage endpoints and operations:
-
-- POST /catalog/ingest/products
-- GET /catalog/products/{canonicalProductId}
-- POST /catalog/mappings/reconcile
-
-These endpoints are intentionally illustrative. Final transport, schema normalization, and versioning details should follow the eventual architecture-stage resolution of the relevant `DEC-###` items.
-
-## 12. Events Produced
-
-- catalog.product.normalized
-- catalog.mapping.conflict.detected
-
-## 13. Events Consumed
-
-- catalog.feed.received
-- dam.asset.updated
-- commerce.product.updated
-
-## 14. Integrations
-
-- product information management and commerce data sources
-- inventory and order-management systems
-- digital asset management
-- merchandising governance and operator controls
-- recommendation decisioning and ranking
-- shared contracts and delivery API
-- explainability and auditability
-
-## 15. UI Components
-
-- catalog readiness table
-- suppression reason tags
-- feed health incidents list
-- eligibility projection cards
-
-If the capability is primarily backend-oriented, these components still matter for operator, support, or diagnostics surfaces that need to expose its state safely.
-
-## 16. UI Screens
-
-- catalog operations console
-- product readiness detail page
-- feed incident triage screen
-
-## 17. Permissions & Security
-
-- Restrict write operations to the service or operator role responsible for the capability.
-- Expose only role-safe fields to support, operator, and consumer views.
-- Keep audit fields on every state change that affects downstream recommendation behavior.
-- Treat identity, profile, and trace detail as sensitive data; apply redaction and access logging.
-
-## 18. Error Handling
-
-- Reject malformed requests or invalid references with structured validation errors and reason codes.
-- Distinguish degraded or partial success from hard failure whenever the capability can still produce a safe output.
-- Preserve traceability for failures so support and analytics can correlate them later.
-- Downgrade or block activation when identity or consent checks fail instead of leaking sensitive data.
-
-## 19. Edge Cases
-
-- Out-of-order upstream updates arrive and must not regress the effective state.
-- A downstream consumer uses an older snapshot or contract version while the capability advances.
-- Open decisions or policy changes alter behavior between stages and must remain traceable.
-- Conflicted identity or low-confidence links require safe fallback instead of speculative personalization.
-
-## 20. Performance Considerations
-
-- Prefer projection-backed reads for request-time paths instead of recomputing from raw history.
-- Keep payloads, indexes, and cache invalidation aligned with the surfaces that consume the capability.
-- Track degraded-state rates so performance shortcuts do not silently erode recommendation quality.
-
-## 21. Observability
-
-- Emit metrics for throughput, failures, degraded outcomes, and stale-state usage.
-- Log stable identifiers such as `traceId`, `recommendationSetId`, snapshot IDs, or job IDs where the capability affects downstream recommendation behavior.
-- Publish structured reason codes so support, analytics, and audit tooling can bucket outcomes consistently.
-
-## 22. Example Scenarios
-
-### Scenario A: Typical happy-path execution
-
-1. A request or upstream change triggers `Canonical Catalog Identity And Mapping`.
-2. The capability reads the required inputs, applies its policy, and emits the bounded output described above.
-3. Downstream systems consume the result with stable identifiers, version references, and reason codes.
-
-### Illustrative payload
+### Example mapping record
 
 ```json
 {
-  "subFeature": "canonical-catalog-identity-and-mapping",
-  "feature": "catalog-and-product-intelligence",
-  "input": "PIM",
-  "output": "canonical product and variant IDs",
-  "traceId": "trace_example_001",
-  "recommendationSetId": "set_example_001"
+  "sourceNamespace": "commerce",
+  "sourceProductId": "SKU_PARENT_4451",
+  "canonicalProductId": "prd_01JPDW47Q3NRC8JHSC9W4M8AEV",
+  "confidence": "HIGH",
+  "evidence": {
+    "brand": "example-brand",
+    "styleCode": "A-1942",
+    "mode": "RTW"
+  },
+  "policyVersionId": "identity_policy_v7",
+  "effectiveFrom": "2026-03-22T09:15:00Z",
+  "effectiveTo": null
+}
+```
+
+## 11. API Endpoints
+
+Illustrative contract surfaces:
+
+- `POST /catalog/identity/resolve`
+  - Resolve source payload to canonical product/variant IDs
+- `GET /catalog/identity/products/{canonicalProductId}`
+  - Fetch canonical entity and source mappings
+- `GET /catalog/identity/lookup?sourceNamespace=...&sourceId=...`
+  - Reverse lookup by source ID
+- `POST /catalog/identity/conflicts/{conflictId}/resolve`
+  - Operator/system resolution action (merge, split, reject link)
+- `POST /catalog/identity/replay`
+  - Controlled replay for correction/backfill workflows
+
+Required response concepts:
+
+- canonical IDs
+- mapping confidence + reason codes
+- source lineage and policy version
+- conflict status when unresolved
+
+## 12. Events Produced
+
+- `catalog.identity.resolved`
+- `catalog.identity.created`
+- `catalog.identity.mapping.updated`
+- `catalog.identity.conflict.detected`
+- `catalog.identity.conflict.resolved`
+- `catalog.identity.replayed`
+
+## 13. Events Consumed
+
+- `catalog.product.discovered`
+- `catalog.product.updated`
+- `catalog.variant.updated`
+- `catalog.compatibility.updated`
+- `catalog.look.membership.updated`
+- `catalog.policy.identity.updated`
+- `catalog.operator.mapping_resolution.requested`
+
+## 14. Integrations
+
+- PIM and commerce source systems for product/variant identity feeds
+- DAM and curation systems for identity-adjacent references
+- Compatibility/look-authoring systems for canonical edge references
+- Readiness evaluation module (consumes canonical IDs and lineage)
+- Market/channel/mode eligibility module (consumes canonical IDs)
+- Shared delivery contracts and explainability services (consume mapping version and provenance)
+- Governance/operator tooling for conflict review and merge/split controls
+
+## 15. UI Components
+
+- **Mapping conflict queue table** (source IDs, candidate canonical IDs, confidence, reason codes)
+- **Entity lineage timeline** (source links and supersession history)
+- **Merge/split preview panel** (impact before commit)
+- **Policy version badge + diff viewer** (which mapping policy was applied)
+- **Source lookup widget** (source ID -> canonical ID quick check)
+
+## 16. UI Screens
+
+- **Catalog Identity Console** - operational overview of mapping health
+- **Conflict Triage Screen** - review and resolve ambiguous mappings
+- **Canonical Entity Detail** - canonical product/variant plus full source lineage
+- **Replay and Correction Screen** - controlled reprocessing and audit trail
+
+## 17. Permissions & Security
+
+- Only service principals and authorized catalog operators can create/modify mappings.
+- Merge/split and policy overrides require elevated role and explicit audit annotation.
+- Read APIs may be broader, but sensitive source internals must be role-filtered.
+- Every mapping mutation must log actor, reason, timestamp, and before/after linkage.
+- No customer PII is required for this capability; enforce product-data-only boundaries.
+
+## 18. Error Handling
+
+- Return structured validation errors for missing namespace/IDs or schema violations.
+- Return deterministic conflict responses when safe matching is impossible.
+- Distinguish:
+  - `INVALID_INPUT` (malformed payload),
+  - `NO_MATCH` (safe create-or-review decision),
+  - `AMBIGUOUS_MATCH` (conflict queue),
+  - `POLICY_BLOCKED` (policy disallows auto-link),
+  - `DEPENDENCY_UNAVAILABLE` (temporary retry path).
+- Never silently fallback to low-confidence auto-linking.
+- Preserve idempotency keys for retried ingestion requests.
+
+## 19. Edge Cases
+
+- Same source ID reused by upstream system after archival (must use validity windows, not overwrite history)
+- Parent product match is clear, but variant option mapping is ambiguous
+- Source correction arrives out of order and appears older than current mapping
+- RTW and CM share style code but should remain separate canonical products
+- One source deletes item while another still marks active; mapping remains active but conflict flagged
+- Manual merge later requires split rollback because initial evidence was wrong
+- Replay run under new policy version changes confidence outcome for historical records
+
+## 20. Performance Considerations
+
+- Keep source-ID lookup latency low with dedicated indexes on `(sourceNamespace, sourceId, effectiveTo)`.
+- Separate hot read path (lookup/projection) from heavier reconciliation path (merge/split/replay).
+- Use incremental event-driven updates for normal ingestion; reserve full replay for controlled batches.
+- Ensure conflict queue operations do not block safe deterministic mappings.
+- Size mapping history retention to support audit/replay needs from BR-008 and trace requirements.
+
+## 21. Observability
+
+Track at minimum:
+
+- mapping resolution throughput and latency
+- auto-link vs review-required rates
+- conflict rate by source namespace and category
+- merge/split frequency and rollback frequency
+- idempotency conflict rate
+- replay backlog and replay success rate
+
+Operational logs should include:
+
+- `canonicalProductId` / `canonicalVariantId`
+- source namespace and source ID
+- `policyVersionId`
+- mapping decision reason code
+- correlation IDs used by downstream trace systems
+
+## 22. Example Scenarios
+
+### Scenario A: New product appears in PIM then commerce
+
+1. PIM sends product + variants with internal IDs.
+2. Identity resolver creates canonical product and variant IDs.
+3. Commerce payload arrives with different source IDs but matching evidence.
+4. Resolver links commerce IDs to existing canonical entities.
+5. `catalog.identity.mapping.updated` is emitted; downstream readiness projection updates.
+
+### Scenario B: Ambiguous source update triggers conflict
+
+1. DAM payload references style code matching two canonical products.
+2. Confidence does not meet `AUTO_LINK` threshold.
+3. Resolver emits `catalog.identity.conflict.detected` and creates conflict case.
+4. Operator reviews evidence and resolves with merge/split action.
+5. Resolution event updates downstream lineage and trace context.
+
+### Illustrative resolve response
+
+```json
+{
+  "requestId": "req_01JPDX5HEM7B6Q5SFTTV9ED9QW",
+  "result": "resolved",
+  "canonicalProductId": "prd_01JPDW47Q3NRC8JHSC9W4M8AEV",
+  "canonicalVariantId": "var_01JPDW4V07T4R8DV6JMY8SPW2G",
+  "mappingConfidence": "HIGH",
+  "policyVersionId": "identity_policy_v7",
+  "reasonCodes": ["exact_style_code_match", "mode_match_rtw"]
 }
 ```
 
 ## 23. Implementation Notes
 
-- Backend services should own the business logic and expose read-optimized contracts to downstream consumers.
-- Persist versioned records or snapshots rather than mutating the effective truth in place when the capability affects delivery or audit.
-- Use background jobs or stream consumers where the capability depends on ingestion, projections, or recomputation.
-- Prefer stable canonical IDs from `docs/project/data-standards.md` for products, customers, looks, rules, campaigns, experiments, and recommendation sets.
+- Implement as a dedicated identity-mapping module under `catalog-and-product-intelligence`; do not embed mapping logic in ranking or UI services.
+- Prefer append-only change logs plus effective-dated active mapping views.
+- Keep merge/split actions explicit commands with compensating actions (undo path), not direct row edits.
+- Treat precedence policy as data/configuration, not static code constants (`DEC-014` dependency).
+- Publish stable canonical IDs and mapping metadata required by readiness/eligibility modules (`DEC-015`/`DEC-016`/`DEC-017` dependencies).
+- Ensure compatibility/look references are rewritten to canonical IDs at ingestion boundaries.
 
-Specific implementation implications for this capability:
+Implementation implications:
 
-- Backend services: add or extend a `canonical-catalog-identity-and-mapping` service boundary under the `catalog-and-product-intelligence` domain.
-- Database tables or documents: persist the primary entities listed in the data model with versioning and audit fields.
-- Jobs or workers: add asynchronous processing where ingestion, recomputation, replay, or batch delivery is part of the lifecycle.
-- External APIs: integrate only through the upstream systems explicitly referenced in the parent feature dependencies and inputs.
-- Frontend or shared UI: expose only the UI components and screens listed above; do not create duplicate surface-specific semantics.
+- **Backend services:** identity resolver, conflict manager, replay worker
+- **Storage:** canonical entities, mapping tables, conflict queue, append-only changelog
+- **Jobs/workers:** reconciliation worker, replay/backfill worker, projection invalidation worker
+- **External APIs:** source ingestion adapters for PIM/commerce/DAM/curation
+- **Operator tooling:** conflict triage UI and lineage explorer
 
 ## 24. Testing Requirements
 
-- Unit tests for state transitions, precedence rules, and reason-code assignment.
-- Contract tests for the capability's illustrative API shapes and event payloads.
-- Integration tests covering upstream dependency inputs and downstream consumer expectations.
-- Regression tests for degraded, empty, or blocked paths.
-- Traceability tests that verify stable identifiers and policy references propagate correctly.
-- Privacy and permission tests that verify redaction, gating, and revocation behavior.
+- **Unit tests**
+  - exact/heuristic matching behavior
+  - confidence threshold transitions
+  - mode separation and merge/split command validation
+- **Contract tests**
+  - resolve/lookup API schemas
+  - mapping/conflict event payload schema and version compatibility
+- **Integration tests**
+  - PIM + commerce dual-source linking
+  - conflict creation and operator resolution flow
+  - replay behavior under policy-version changes
+- **Data integrity tests**
+  - one-active-mapping invariant per source namespace + source ID
+  - effective-date validity and supersession correctness
+- **Performance tests**
+  - high-volume source ingestion and lookup latency under load
+  - replay batch processing impact on online resolution
+- **Audit/security tests**
+  - role enforcement for merge/split operations
+  - immutable audit trail and traceability of mapping decisions
