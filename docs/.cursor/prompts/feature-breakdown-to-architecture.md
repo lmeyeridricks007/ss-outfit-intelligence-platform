@@ -28,7 +28,8 @@ Produce an implementation-oriented technical architecture artifact from an appro
 - **Risks and trade-offs:** Technology or scale trade-offs (e.g. "Ranking in-request vs async"; "Cache invalidation strategy"). Document chosen direction and alternatives considered.
 - **Readiness criteria:** Checklist for "implementation plan can be written" (e.g. "Contract for recommendation API agreed"; "Graph service boundary and deployment model defined"). No hand-wavy "will be decided later" on critical path.
 - **Approval / milestone-gate notes:** From feature item; state if UI gate or other human gate applies so implementation plan can encode it.
-
+ - Read `boards/features.md` when it exists to find the corresponding feature row; **if the file is missing, create a minimal `boards/features.md`** (scaffold table + rows inferred from the issue and `docs/features/`) as part of this run — do **not** refuse to proceed only because the board was absent
+ 
 ## Quality Rules
 - Do not stay conceptual; every component and flow should be implementation-oriented (names, contracts, failure modes).
 - Define dependencies and failure modes explicitly (timeouts, fallbacks, degradation).
