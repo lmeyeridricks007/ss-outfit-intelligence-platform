@@ -11,203 +11,310 @@
 
 ## 1. Purpose
 
-Define and publish canonical recommendation event families so every consumer records impression, click, save, add-to-cart, purchase, dismiss, and override outcomes with the same semantics.
+Define one canonical event contract for recommendation telemetry so all producers (web, server fallback, backend jobs, commerce outcome pipelines, and later channel integrations) emit the same seven event families with consistent semantics:
 
-The goal of this capability is to give architecture, planning, UI, backend, analytics, and governance work a bounded implementation module instead of leaving this behavior implicit inside the broader feature file.
+- impression
+- click
+- save
+- add-to-cart
+- purchase
+- dismiss
+- override
+
+This capability exists to prevent surface-specific event drift and to make experiment and outcome analysis trustworthy across PDP, cart, homepage expansion, email, and clienteling.
 
 ## 2. Core Concept
 
-This capability sits under `Analytics and experimentation` and owns one clear responsibility: define and publish canonical recommendation event families so every consumer records impression, click, save, add-to-cart, purchase, dismiss, and override outcomes with the same semantics.
+`canonical-recommendation-events` is the semantic boundary between recommendation behavior and analytics ingestion. It standardizes:
 
-It should be implemented as a reusable platform module whose contracts remain consistent across channels and environments rather than as surface-specific one-off logic.
+1. **Event names** and allowed transitions
+2. **Required identifiers** (`recommendationSetId`, `traceId`, product / look references, experiment context)
+3. **Required dimensions** (channel, surface, placement, recommendation type, source mix, event source)
+4. **Validation and rejection behavior** (schema checks, enum checks, quarantine for invalid payloads)
+5. **Versioning** so contracts can evolve without breaking downstream consumers
+
+The sub-feature does not choose final transport technology; it defines the minimum event semantics that every implementation path must preserve.
 
 ## 3. User Problems Solved
 
-- Reduces ambiguity for teams implementing `Analytics and experimentation` by isolating a single capability boundary.
-- Prevents downstream consumers from reinterpreting `Canonical Recommendation Events` behavior differently on each surface or channel.
-- Keeps cross-cutting uncertainty explicit through open-decision references instead of forcing later stages to guess.
+- **Analytics teams** can compare performance across surfaces because "impression" and "purchase" mean the same thing everywhere.
+- **Product and experimentation teams** can trust uplift reporting because experiment and variant context is carried on all relevant events.
+- **Merchandising and governance teams** can separate model effects from override/campaign effects because override telemetry is first-class, not an afterthought.
+- **Engineering teams** can integrate once against a stable schema instead of reinventing event payloads per channel.
+- **Audit and support teams** can reconstruct recommendation journeys from a shared identifier model.
 
 ## 4. Trigger Conditions
 
-- A recommendation module becomes visible or an interaction occurs.
-- A downstream consumer integrates with recommendation telemetry for the first time.
-- A schema update is required for new recommendation types or surfaces.
+Canonical recommendation events are emitted when:
+
+- a recommendation response is delivered and exposed (impression, including governed fallback path)
+- a customer interacts with recommended content (click, save, dismiss, add-to-cart)
+- a downstream commerce outcome is linked to recommendation context (purchase)
+- an operator intervention changes recommendation behavior (override)
+- schema version changes require producer updates or dual-write migration windows
 
 ## 5. Inputs
 
-- delivery envelope metadata
-- surface interaction events
-- commerce action outcomes
-- schema version and event-source policy
-- identity and consent context when allowed
+- recommendation delivery contract payloads from shared delivery API
+- surface interaction signals (web/mobile/clienteling surfaces)
+- commerce / OMS outcome events (orders, line items, cancellations if modeled)
+- governance annotation feeds (override/campaign context)
+- experiment assignment metadata (`experimentId`, `variantId`, `assignmentKey`)
+- identity context (`canonicalCustomerId` or anonymous session ID with confidence state)
+- schema registry / allowed enum configuration
 
 ## 6. Outputs
 
-- canonical recommendation events
-- schema validation results
-- event publishing status
-- contract-safe telemetry payloads
+- validated canonical recommendation events ready for ingestion
+- normalized event records with schema version and source metadata
+- rejected-event records with reason codes and remediation metadata
+- idempotency decisions (accepted duplicate, dropped duplicate, retried)
+- downstream-ready event streams/tables for attribution and reporting
 
 ## 7. Workflow / Lifecycle
 
-1. Map a surface action or system observation to a canonical recommendation event family.
-2. Attach recommendation-set ID, trace ID, type, placement, and context metadata.
-3. Validate the event against the current schema version.
-4. Publish the event to analytics ingestion and persist idempotency markers.
-5. Expose validation or delivery errors to telemetry health monitoring.
+1. **Producer capture:** producer emits a candidate event with recommendation IDs and context.
+2. **Validation:** schema, required-field, and enum validation executes against active version.
+3. **Enrichment:** attach market/channel metadata, governance context, and identity-confidence fields where available.
+4. **Idempotency check:** dedupe key check prevents double-counting from retries and re-renders.
+5. **Publish:** accepted events are written to canonical ingestion stream/table.
+6. **Quarantine:** invalid or unsafe events are routed to rejected-event storage.
+7. **Projection:** accepted events feed attribution logic, experiment scorecards, and health dashboards.
+8. **Replay support:** corrected payloads or historical backfills can be replayed with explicit provenance.
 
 ## 8. Business Rules
 
-- Impression means visible exposure or an explicitly governed fallback, not mere API success.
-- Experiment and governance context must be carried together so analysis does not misattribute lift or regressions.
-- Stable recommendation-set IDs and trace IDs are required for trustworthy attribution and outcome joins.
-- This capability must stay aligned with `docs/features/analytics-and-experimentation.md` as the feature-stage source of truth.
-- Open decisions must remain explicit and must not be silently resolved in this spec: `DEC-006`, `DEC-007`.
-- Stable `traceId` and `recommendationSetId` handling is required whenever the capability affects delivered recommendation behavior.
+- The canonical event families are fixed: impression, click, save, add-to-cart, purchase, dismiss, override.
+- `recommendationSetId` and `traceId` are required for all event families where recommendation attribution is expected.
+- Impression represents visible exposure (or policy-approved fallback), not delivery API success alone.
+- `eventSource` must distinguish browser, server fallback, backend, import, or operator origin.
+- Recommendation type must use shared domain values (outfit, cross-sell, upsell, style bundle, occasion-based, contextual, personal).
+- Source mix context must preserve curated/rule-based/AI-ranked/mixed semantics.
+- Producers may add optional fields, but cannot redefine canonical field meanings.
+- Invalid payloads must not be silently dropped; they require explicit rejection reason codes.
+- Open decisions `DEC-006` and `DEC-007` remain unresolved and must not be implicitly closed here.
 
 ## 9. Configuration Model
 
-- `enabled` flag to turn the capability on or off per environment.
-- `policyVersion` reference so behavior stays traceable across changes.
-- `market`, `channel`, `surface`, and `mode` scoping keys where applicable.
-- Approval, precedence, and publication schedule settings.
-- Trace, telemetry, and retention configuration for observability and audit.
+Required configuration domains:
+
+- `schemaVersion`: active and allowed-compatible event schema versions
+- `requiredFieldsByEventType`: per-family required field map
+- `enumPolicies`: allowed values for recommendation type, source mix, event source, channel, and surface
+- `idempotency`: key composition and dedupe window settings
+- `fallbackPolicyRefs`: links to impression fallback policy decisions and rollout flags
+- `enrichmentPolicies`: when to attach identity confidence, campaign IDs, or governance snapshots
+- `retentionAndQuarantine`: accepted/rejected event retention periods by environment
+- `alertThresholds`: failure-rate, duplicate-rate, and missing-ID thresholds
+
+All configuration changes should be versioned and auditable.
 
 ## 10. Data Model
 
 Primary entities:
 
-- RecommendationEvent
-- EventSchemaVersion
-- InteractionContext
-- TelemetryPublishResult
-- EventIdempotencyKey
+1. **RecommendationEvent**
+   - `eventId`, `eventType`, `eventTs`, `schemaVersion`
+   - `channel`, `surface`, `placement`
+   - `recommendationSetId`, `traceId`
+   - `recommendationType`, `sourceMix`, `eventSource`
+   - `itemId` or `lookId`, `anchorProductId` (where applicable)
+   - `experimentId`, `variantId`, `assignmentKey` (where applicable)
+   - `ruleContext`, `campaignId`, `overrideFlag`
+   - `customerIdOrSessionId`, `identityConfidence`
 
-Recommended shared fields across the entities above:
+2. **EventIngestionResult**
+   - `eventId`, `ingestionStatus`, `processedAt`
+   - `idempotencyKey`, `duplicateDisposition`
+   - `errorCode` and `errorDetail` (if rejected)
 
-- stable canonical IDs and source references where applicable
-- createdAt / updatedAt timestamps
-- policy or schema version references
-- traceable reason codes for degraded, blocked, or overridden outcomes
+3. **EventSchemaVersion**
+   - `schemaVersion`, `effectiveFrom`, `compatibilityMode`, `requiredFields`
+
+4. **RejectedEvent**
+   - original payload snapshot, rejection reason, producer metadata, replay eligibility
 
 ## 11. API Endpoints
 
-Illustrative feature-stage endpoints and operations:
+Illustrative contract-level endpoints:
 
-- POST /analytics/events
-- GET /analytics/schemas/{schemaVersion}
+- `POST /analytics/recommendation-events`
+- `POST /analytics/recommendation-events/batch`
+- `GET /analytics/recommendation-events/schemas/{schemaVersion}`
+- `GET /analytics/recommendation-events/validation-rules`
 
-These endpoints are intentionally illustrative. Final transport, schema normalization, and versioning details should follow the eventual architecture-stage resolution of the relevant `DEC-###` items.
+Transport choices remain architecture-stage decisions, but wire contracts must preserve the canonical fields and validation semantics above.
 
 ## 12. Events Produced
 
-- analytics.event.published
-- analytics.event.rejected
+- `recommendation.events.accepted`
+- `recommendation.events.rejected`
+- `recommendation.events.duplicate-detected`
+- `recommendation.events.schema-mismatch`
+- `recommendation.events.replayed`
 
 ## 13. Events Consumed
 
-- delivery.envelope.packaged
-- surface.impression.detected
-- commerce.add-to-cart.completed
+- `recommendation.delivery.served`
+- `surface.impression.detected`
+- `surface.recommendation.clicked`
+- `surface.recommendation.saved`
+- `surface.recommendation.dismissed`
+- `commerce.cart.added`
+- `commerce.order.completed`
+- `governance.override.applied`
+- `experimentation.assignment.resolved`
 
 ## 14. Integrations
 
-- shared contracts and delivery API
-- ecommerce surface experiences
-- channel expansion: email and clienteling
-- identity and style profile
-- merchandising governance and operator controls
-- explainability and auditability
-- commerce and order systems
-- warehouse and reporting projections
+- shared contracts and delivery API (source of recommendation identifiers)
+- ecommerce surface experiences (primary producer for interaction events)
+- impression-policy-and-server-fallback (fallback source semantics)
+- outcome-attribution-and-confidence (purchase linkage downstream)
+- experiment-assignment-and-delivery-contracts (variant metadata integrity)
+- governance-annotations-for-analysis (override/campaign analysis context)
+- identity and style profile (identity confidence and mapping)
+- explainability and auditability (trace reconstruction)
 
 ## 15. UI Components
 
-- experiment scorecards
-- telemetry health cards
-- event schema tables
-- governance annotation filters
+Internal/operator-facing components:
 
-If the capability is primarily backend-oriented, these components still matter for operator, support, or diagnostics surfaces that need to expose its state safely.
+- schema explorer table (required vs optional fields by event type)
+- ingestion health cards (accept/reject/duplicate rates)
+- rejection reason distribution chart
+- sample payload inspector with field-level validation results
+- event lineage panel keyed by `traceId` and `recommendationSetId`
 
 ## 16. UI Screens
 
-- analytics dashboard
-- experiment detail screen
 - telemetry health console
+- schema/version management view
+- rejected event triage screen
+- trace-linked analytics drilldown panel
 
 ## 17. Permissions & Security
 
-- Restrict write operations to the service or operator role responsible for the capability.
-- Expose only role-safe fields to support, operator, and consumer views.
-- Keep audit fields on every state change that affects downstream recommendation behavior.
-- Use separation-of-duty and approval checks where policy marks the control as high risk.
+- Only trusted producer services and approved collectors can submit canonical events.
+- Raw payload access is restricted by role; aggregate metrics are broader.
+- Sensitive identity fields must be masked or omitted by role and region.
+- All schema/config changes require auditable actor identity and timestamp.
+- Access to replay tooling and rejected-event exports should be tightly scoped.
 
 ## 18. Error Handling
 
-- Reject malformed requests or invalid references with structured validation errors and reason codes.
-- Distinguish degraded or partial success from hard failure whenever the capability can still produce a safe output.
-- Preserve traceability for failures so support and analytics can correlate them later.
+- Validation failures return structured errors with machine-readable reason codes.
+- Unknown schema versions are rejected with explicit upgrade guidance.
+- Missing required identifiers (`recommendationSetId`, `traceId` when required) are hard failures for accepted ingestion.
+- Temporary downstream outages must use retry/backoff with idempotency-safe behavior.
+- Rejected events are quarantined, not discarded, to support diagnosis and replay.
 
 ## 19. Edge Cases
 
-- Out-of-order upstream updates arrive and must not regress the effective state.
-- A downstream consumer uses an older snapshot or contract version while the capability advances.
-- Open decisions or policy changes alter behavior between stages and must remain traceable.
+- Browser blocked events require server fallback while preserving canonical fields.
+- Multiple recommendation sets may reference the same item before purchase; attribution may become low-confidence, but event semantics stay fixed.
+- Late-arriving purchase events must still reference prior recommendation context when available.
+- Replayed historical events must preserve original event time and mark replay provenance.
+- Same-session rerenders can emit duplicate impressions; idempotency policy prevents inflated counts.
+- Event producers on mixed schema versions require compatibility windows and explicit deprecation policy.
 
 ## 20. Performance Considerations
 
-- Prefer projection-backed reads for request-time paths instead of recomputing from raw history.
-- Keep payloads, indexes, and cache invalidation aligned with the surfaces that consume the capability.
-- Track degraded-state rates so performance shortcuts do not silently erode recommendation quality.
+- Handle high-volume ingestion paths without dropping canonical validation guarantees.
+- Keep validation fast via cached schema registries and enum maps.
+- Use batch endpoints for high-throughput producers where practical.
+- Ensure idempotency lookups are indexed for write-heavy workloads.
+- Preserve near-real-time availability for telemetry health and experiment monitoring views.
 
 ## 21. Observability
 
-- Emit metrics for throughput, failures, degraded outcomes, and stale-state usage.
-- Log stable identifiers such as `traceId`, `recommendationSetId`, snapshot IDs, or job IDs where the capability affects downstream recommendation behavior.
-- Publish structured reason codes so support, analytics, and audit tooling can bucket outcomes consistently.
+Track at minimum:
+
+- accepted events per second by event type/channel/surface
+- rejection rate and top rejection reasons
+- duplicate detection rate
+- missing critical-field rate (`recommendationSetId`, `traceId`, event source)
+- ingestion latency (event time to accepted time)
+- schema-version distribution
+- fallback-source distribution (browser vs server fallback)
+
+Operational logs should always include `eventId`, `traceId`, `recommendationSetId`, `schemaVersion`, and producer identity.
 
 ## 22. Example Scenarios
 
-### Scenario A: Typical happy-path execution
+### Scenario A: PDP impression with browser event source
 
-1. A request or upstream change triggers `Canonical Recommendation Events`.
-2. The capability reads the required inputs, applies its policy, and emits the bounded output described above.
-3. Downstream systems consume the result with stable identifiers, version references, and reason codes.
-
-### Illustrative payload
+1. Delivery API returns outfit recommendations with IDs and experiment context.
+2. Module visibility threshold is met on PDP.
+3. Browser producer emits canonical `impression` event.
+4. Validator accepts event and publishes to canonical stream.
 
 ```json
 {
-  "subFeature": "canonical-recommendation-events",
-  "feature": "analytics-and-experimentation",
-  "input": "delivery envelope metadata",
-  "output": "canonical recommendation events",
-  "traceId": "trace_example_001",
-  "recommendationSetId": "set_example_001"
+  "eventId": "evt_01JQ4D2MFK3V6PK5V4X9S2K7CR",
+  "eventType": "impression",
+  "eventTs": "2026-03-22T11:45:03Z",
+  "channel": "web",
+  "surface": "pdp",
+  "placement": "complete_the_look_primary",
+  "recommendationSetId": "recset_01JQ4D2K7Q7M8X5TZ7A9B9D3AV",
+  "traceId": "trace_01JQ4D2JQK9V4S6E2Y1Z8N6W0R",
+  "recommendationType": "outfit",
+  "itemId": "prod_67890",
+  "position": 1,
+  "eventSource": "browser",
+  "experimentId": "exp_rank_mix_2026_03",
+  "variantId": "treatment_b",
+  "sourceMix": "curated_plus_ai_ranked",
+  "schemaVersion": "1.0"
+}
+```
+
+### Scenario B: Purchase event linked to prior exposure
+
+1. OMS emits order completion.
+2. Attribution service links order line to prior `recommendationSetId` and `traceId`.
+3. Canonical `purchase` event is emitted with confidence metadata for downstream reporting.
+
+```json
+{
+  "eventId": "evt_01JQ4DBW1D0R9Y4A9P3C5N7L2X",
+  "eventType": "purchase",
+  "eventTs": "2026-03-22T14:10:26Z",
+  "channel": "web",
+  "surface": "checkout",
+  "recommendationSetId": "recset_01JQ4D2K7Q7M8X5TZ7A9B9D3AV",
+  "traceId": "trace_01JQ4D2JQK9V4S6E2Y1Z8N6W0R",
+  "recommendationType": "outfit",
+  "itemId": "prod_67890",
+  "eventSource": "backend",
+  "outcomeOrderId": "ord_20260322_11872",
+  "attributionConfidence": "high",
+  "schemaVersion": "1.0"
 }
 ```
 
 ## 23. Implementation Notes
 
-- Backend services should own the business logic and expose read-optimized contracts to downstream consumers.
-- Persist versioned records or snapshots rather than mutating the effective truth in place when the capability affects delivery or audit.
-- Use background jobs or stream consumers where the capability depends on ingestion, projections, or recomputation.
-- Prefer stable canonical IDs from `docs/project/data-standards.md` for products, customers, looks, rules, campaigns, experiments, and recommendation sets.
-- Retain enough lineage to join behavior back to source events, governance snapshots, and outcomes without rereading raw logs.
+- **Backend services:** create a canonical event-ingestion boundary inside analytics domain; avoid per-surface ingestion logic forks.
+- **Database/storage:** separate accepted events, rejected events, schema definitions, and idempotency ledgers.
+- **Jobs/workers:** run enrichment, replay, and reconciliation jobs asynchronously; preserve event immutability.
+- **External interfaces:** keep producer SDKs thin and schema-driven to reduce contract drift.
+- **UI/ops tooling:** provide schema health and rejection triage views for rapid producer remediation.
 
-Specific implementation implications for this capability:
+Implementation boundaries to keep explicit:
 
-- Backend services: add or extend a `canonical-recommendation-events` service boundary under the `analytics-and-experimentation` domain.
-- Database tables or documents: persist the primary entities listed in the data model with versioning and audit fields.
-- Jobs or workers: add asynchronous processing where ingestion, recomputation, replay, or batch delivery is part of the lifecycle.
-- External APIs: integrate only through the upstream systems explicitly referenced in the parent feature dependencies and inputs.
-- Frontend or shared UI: expose only the UI components and screens listed above; do not create duplicate surface-specific semantics.
+- This sub-feature owns event semantics and validation.
+- Attribution-window policy and experiment-stickiness policy remain open under `DEC-007`.
+- Detailed server fallback policy remains open under `DEC-006`.
 
 ## 24. Testing Requirements
 
-- Unit tests for state transitions, precedence rules, and reason-code assignment.
-- Contract tests for the capability's illustrative API shapes and event payloads.
-- Integration tests covering upstream dependency inputs and downstream consumer expectations.
-- Regression tests for degraded, empty, or blocked paths.
-- Traceability tests that verify stable identifiers and policy references propagate correctly.
+- Unit tests for event-family validators and required-field enforcement.
+- Contract tests for all seven canonical event families.
+- Compatibility tests for schema version upgrades and dual-version periods.
+- Idempotency tests for retry, rerender, and replay scenarios.
+- Integration tests across delivery -> interaction -> purchase -> override paths.
+- Failure-path tests for rejection quarantine and replay workflows.
+- Permissions tests for raw payload access and sensitive-field masking.
+- Observability tests asserting required metrics/log fields are emitted.
