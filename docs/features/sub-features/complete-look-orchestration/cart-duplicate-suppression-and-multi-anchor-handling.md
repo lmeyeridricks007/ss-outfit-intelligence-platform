@@ -11,102 +11,190 @@
 
 ## 1. Purpose
 
-Suppress duplicates already represented in cart or anchor context and resolve multi-anchor cases so complete-look answers stay useful instead of repeating what the shopper already has.
+Ensure complete-look `outfit` responses remain coherent, non-redundant, and actionable when:
 
-The goal of this capability is to give architecture, planning, UI, backend, analytics, and governance work a bounded implementation module instead of leaving this behavior implicit inside the broader feature file.
+- the shopper cart already contains one or more recommended members
+- multiple plausible anchors exist in the same request (cart, occasion, or assisted-selling context)
+
+This capability prevents duplicate leakage and anchor ambiguity from degrading the complete-look experience into a confusing or low-value module.
 
 ## 2. Core Concept
 
-This capability sits under `Complete-look orchestration` and owns one clear responsibility: suppress duplicates already represented in cart or anchor context and resolve multi-anchor cases so complete-look answers stay useful instead of repeating what the shopper already has.
+This module sits between initial outfit assembly and final delivery packaging. It performs two linked controls:
 
-It should be implemented as a reusable platform module whose contracts remain consistent across channels and environments rather than as surface-specific one-off logic.
+1. **Cart duplicate suppression**  
+   Detect duplicate recommendations relative to cart state (exact SKU, canonical product, or policy-defined near-duplicate) and either suppress, substitute, or demote them.
+2. **Primary anchor resolution**  
+   Resolve a single lead anchor mission when multiple anchors are plausible, then revalidate slot coverage for the chosen anchor.
+
+The output remains a typed `outfit` set with grouped semantics, preserved traceability, and explicit reason codes for every suppression or anchor decision.
 
 ## 3. User Problems Solved
 
-- Reduces ambiguity for teams implementing `Complete-look orchestration` by isolating a single capability boundary.
-- Prevents downstream consumers from reinterpreting `Cart Duplicate Suppression And Multi Anchor Handling` behavior differently on each surface or channel.
-- Keeps cross-cutting uncertainty explicit through open-decision references instead of forcing later stages to guess.
+- **Cart frustration:** avoids recommending products the shopper just added.
+- **Mission drift:** avoids a mixed-anchor answer that feels like unrelated add-ons.
+- **Inconsistent behavior across surfaces:** centralizes suppression and anchor tie-break logic so PDP/cart/clienteling do not diverge.
+- **Support opacity:** emits reason codes and trace metadata for why an item was removed or why one anchor won.
 
 ## 4. Trigger Conditions
 
-- Cart context introduces exact or near-duplicate members.
-- Multiple plausible lead items could seed an outfit.
-- An assisted-selling or occasion flow mixes more than one anchor intent.
+- request includes cart state and at least one outfit candidate
+- request has two or more valid anchor candidates
+- cart mutation causes a refresh of an already-rendered outfit set
+- fallback controller asks for re-check after slot substitutions
 
 ## 5. Inputs
 
-- cart or session contents
-- assembled outfit members
-- duplicate-suppression policy
-- anchor precedence policy
-- surface and mode context
+- normalized request context: `surface`, `mode`, `market`, `channel`, `placement`
+- cart lines with canonical and variant IDs
+- candidate outfit assemblies from upstream orchestration stages
+- candidate anchor list with anchor rationale and confidence
+- policy snapshot:
+  - duplicate policy
+  - anchor precedence policy
+  - degraded-slot policy references
+- governance and campaign context
+- optional profile/context signals allowed by consent and confidence policy
 
 ## 6. Outputs
 
-- duplicate-suppressed outfit assembly
-- primary-anchor selection record
-- suppression reason codes
-- reordered or reduced slot plan for final delivery
+- deduplicated outfit assemblies ready for packaging
+- `primaryAnchorDecision` record with deterministic tie-break evidence
+- `suppressionRecords[]` with reason codes and actions (`suppress`, `substitute`, `demote`)
+- adjusted slot plan (required vs optional coverage after suppression)
+- machine-readable degradation indicators when minimum coverage is threatened
 
 ## 7. Workflow / Lifecycle
 
-1. Compare outfit members to current cart or request context.
-2. Remove or demote exact duplicates according to recommendation-type policy.
-3. Choose the primary anchor when multiple anchors remain plausible.
-4. Re-check slot coverage after suppression or anchor changes.
-5. Emit final grouped assembly metadata for delivery and analytics.
+1. **Load policy snapshot** keyed by `surface`, `mode`, `market`, and policy version.
+2. **Normalize identifiers** for cart lines and outfit members (canonical + variant references).
+3. **Run duplicate classification**:
+   - exact variant duplicate
+   - canonical product duplicate
+   - policy-defined near-duplicate
+4. **Apply duplicate action policy** per slot and surface:
+   - suppress duplicate member
+   - substitute from eligible alternatives
+   - demote to optional slot when allowed
+5. **Resolve primary anchor** when multiple anchors remain:
+   - score candidate anchors using policy criteria
+   - apply deterministic tie-breakers
+   - record winning and losing anchors with reasons
+6. **Re-validate slot coverage** for the chosen anchor mission.
+7. **Classify result** as `valid`, `degraded`, or `suppressed`.
+8. **Emit response metadata and events** with `traceId`, `recommendationSetId`, policy version, and reason codes.
 
 ## 8. Business Rules
 
-- Internal look semantics and customer-facing outfit semantics must remain distinct and explicitly labeled.
-- A degraded outfit must still read as a coherent complete-look answer, not a flat list of adjacent items.
-- Anchor preservation and slot completeness rules may vary by surface or mode, but they must be policy-driven and traceable.
-- This capability must stay aligned with `docs/features/complete-look-orchestration.md` as the feature-stage source of truth.
-- Open decisions must remain explicit and must not be silently resolved in this spec: `DEC-018`, `DEC-019`, `DEC-020`.
-- Internal `look` semantics and customer-facing `outfit` semantics must remain distinct where grouped recommendation meaning matters.
+1. Output must remain recommendation type `outfit`; dedupe logic must not silently convert to cross-sell behavior.
+2. Exact in-cart duplicates must not be emitted unless explicit substitution policy requires temporary retention for variant choice.
+3. For cart-extension surfaces, primary anchor mission can be preserved even when the anchor product is omitted from emitted slots because it is already in cart; this must be tagged with an explicit reason code.
+4. If duplicate suppression removes a required slot member, fallback behavior must follow degraded policy rather than silently dropping slot semantics.
+5. Multi-anchor requests must resolve to one primary anchor mission for each returned outfit alternative.
+6. Anchor resolution must be deterministic for a given input bundle and policy version.
+7. Every suppression and anchor decision must be traceable with reason codes and policy references.
+8. Internal `look` semantics and customer-facing `outfit` semantics remain distinct and explicitly labeled.
+9. Open decisions remain explicit and unresolved in this spec:
+   - `DEC-018`: mandatory vs optional slot composition by anchor/surface/mode
+   - `DEC-019`: substitute vs omit thresholds before suppressing full outfit
+   - `DEC-020`: final primary-anchor precedence model in mixed-intent flows
 
 ## 9. Configuration Model
 
-- `enabled` flag to turn the capability on or off per environment.
-- `policyVersion` reference so behavior stays traceable across changes.
-- `market`, `channel`, `surface`, and `mode` scoping keys where applicable.
+| Configuration key | Description |
+| --- | --- |
+| `enabled` | Enables/disables this module by environment. |
+| `policyVersion` | Immutable policy snapshot ID used for replay and audit. |
+| `scope` | `market`, `channel`, `surface`, `mode` selectors. |
+| `duplicatePolicy` | Matching level (`variant`, `canonical`, `near`) and slot-specific actions. |
+| `anchorPolicy` | Anchor scoring criteria and deterministic tie-break order. |
+| `slotRetentionPolicy` | Required/optional slot behavior after suppression or substitution. |
+| `degradedThresholdPolicy` | Minimum viable outfit thresholds passed to fallback controller. |
+| `telemetryPolicy` | Required event fields and sampling controls for traces. |
 
 ## 10. Data Model
 
 Primary entities:
 
-- DuplicateSuppressionRecord
-- PrimaryAnchorDecision
-- CartComparisonResult
-- AdjustedSlotPlan
-- SuppressionReasonCode
+- `CartComparisonResult`
+- `DuplicateSuppressionRecord`
+- `PrimaryAnchorDecision`
+- `SecondaryAnchorDisposition`
+- `AdjustedSlotPlan`
+- `AnchorResolutionReasonCode`
+- `DuplicateReasonCode`
 
-Recommended shared fields across the entities above:
+Required shared fields:
 
-- stable canonical IDs and source references where applicable
-- createdAt / updatedAt timestamps
-- policy or schema version references
-- traceable reason codes for degraded, blocked, or overridden outcomes
+- stable canonical IDs and source-system mappings where applicable
+- `traceId`, `recommendationSetId`, and `requestId`
+- `policyVersion` and schema version
+- timestamps (`createdAt`, `updatedAt`)
+- `reasonCode` and `reasonDetail` (machine-readable + operator-readable)
+- actor/source (`system`, `operatorOverride`, `replay`)
+
+### Illustrative `PrimaryAnchorDecision`
+
+```json
+{
+  "requestId": "req_18377",
+  "traceId": "tr_98ab",
+  "policyVersion": "anchor_policy_v5",
+  "candidateAnchors": [
+    { "productId": "P-SUIT-001", "source": "cart", "score": 0.84 },
+    { "productId": "P-SHOE-227", "source": "cart", "score": 0.72 }
+  ],
+  "selectedAnchor": {
+    "productId": "P-SUIT-001",
+    "selectionReasonCode": "ANCHOR_SCORE_HIGHEST"
+  },
+  "tieBreakerApplied": "CATEGORY_PRECEDENCE",
+  "secondaryAnchors": [
+    { "productId": "P-SHOE-227", "disposition": "KEPT_AS_SLOT_MEMBER" }
+  ]
+}
+```
 
 ## 11. API Endpoints
 
 Illustrative feature-stage endpoints and operations:
 
-- POST /outfits/adjust-for-cart
-- POST /outfits/select-primary-anchor
+- `POST /outfits/resolve-cart-duplicates`
+- `POST /outfits/resolve-primary-anchor`
+- `POST /outfits/reconcile-after-anchor-resolution`
 
-These endpoints are intentionally illustrative. Final transport, schema normalization, and versioning details should follow the eventual architecture-stage resolution of the relevant `DEC-###` items.
+Illustrative request fields:
+
+- `requestContext`
+- `cartLines[]`
+- `candidateOutfits[]`
+- `candidateAnchors[]`
+- `policySnapshotId`
+
+Illustrative response fields:
+
+- `resolvedOutfits[]`
+- `primaryAnchorDecision`
+- `suppressionRecords[]`
+- `degradedStatus`
+
+Transport and canonical schema choices remain architecture-stage concerns and should align with `DEC-001` and `DEC-003` as applicable.
 
 ## 12. Events Produced
 
-- outfit.duplicate.suppressed
-- outfit.primary-anchor.selected
+- `outfit.duplicate.suppressed`
+- `outfit.duplicate.substituted`
+- `outfit.primary-anchor.selected`
+- `outfit.primary-anchor.conflict`
+- `outfit.dedupe-anchor.reconciled`
 
 ## 13. Events Consumed
 
-- cart.context.updated
-- outfit.validation.passed
-- identity.profile.resolved
+- `cart.context.updated`
+- `outfit.intent.resolved`
+- `outfit.validation.passed`
+- `governance.snapshot.selected`
+- `inventory.snapshot.updated`
 
 ## 14. Integrations
 
@@ -120,91 +208,149 @@ These endpoints are intentionally illustrative. Final transport, schema normaliz
 
 ## 15. UI Components
 
-- outfit slot cards
-- grouped look preview panels
-- assembly validation badges
-- substitution explanation chips
-
-If the capability is primarily backend-oriented, these components still matter for operator, support, or diagnostics surfaces that need to expose its state safely.
+- cart complete-look grouped module
+- outfit slot cards with duplicate suppression messaging
+- anchor badge / anchor rationale chip
+- "why this changed" explanation chips for substitutions
+- operator trace panel for anchor conflict inspection
 
 ## 16. UI Screens
 
-- operator outfit preview screen
-- support assembly trace detail
-- merchandising look validation screen
+- cart page complete-look placement
+- PDP follow-up cart drawer (when cart context is available)
+- clienteling outfit builder (operator view)
+- support trace inspection screen
 
 ## 17. Permissions & Security
 
-- Restrict write operations to the service or operator role responsible for the capability.
-- Expose only role-safe fields to support, operator, and consumer views.
-- Keep audit fields on every state change that affects downstream recommendation behavior.
+- Only orchestration services and authorized operator tools may write suppression/anchor overrides.
+- Customer-facing responses must not expose sensitive profile or internal score details.
+- Operator trace depth is role-gated; raw scoring internals are restricted to approved roles.
+- All override actions must be audited with actor identity and reason.
 
 ## 18. Error Handling
 
-- Reject malformed requests or invalid references with structured validation errors and reason codes.
-- Distinguish degraded or partial success from hard failure whenever the capability can still produce a safe output.
-- Preserve traceability for failures so support and analytics can correlate them later.
+- Reject malformed payloads with structured validation errors (`INVALID_CART_CONTEXT`, `MISSING_POLICY_SNAPSHOT`, `INVALID_ANCHOR_SET`).
+- Return partial/degraded responses when safe rather than hard-failing full request.
+- If no valid anchor can be resolved, emit explicit suppression state with reason code (`ANCHOR_UNRESOLVABLE`).
+- Preserve trace fields on every failure path for support and analytics correlation.
 
 ## 19. Edge Cases
 
-- Out-of-order upstream updates arrive and must not regress the effective state.
-- A downstream consumer uses an older snapshot or contract version while the capability advances.
-- Open decisions or policy changes alter behavior between stages and must remain traceable.
-- Multiple lead items or duplicate candidates require deterministic tie-breaking.
+- cart contains same canonical product in different sizes/variants
+- duplicate suppression removes anchor candidate itself
+- two anchors tie on score and both are inventory-valid
+- occasion-led request plus anchor-rich cart creates mixed-intent conflict
+- stale cart snapshot arrives after fresh snapshot (out-of-order updates)
+- curated look insists on member already present in cart
+- low-confidence identity changes after initial anchor resolution
 
 ## 20. Performance Considerations
 
-- Prefer projection-backed reads for request-time paths instead of recomputing from raw history.
-- Keep payloads, indexes, and cache invalidation aligned with the surfaces that consume the capability.
-- Track degraded-state rates so performance shortcuts do not silently erode recommendation quality.
-- Interactive web paths should meet the Phase 1 delivery latency target once `DEC-002` is resolved.
+- Use projection-backed cart and candidate views for request-time dedupe checks.
+- Keep anchor scoring inputs lightweight and cacheable by policy snapshot.
+- Avoid N x M slot comparisons by pre-indexing cart IDs and canonical mappings.
+- Track latency by sub-step (dedupe, anchor resolution, revalidation) to isolate bottlenecks.
+- Interactive paths must align with Phase 1 latency expectations once `DEC-002` is finalized.
 
 ## 21. Observability
 
-- Emit metrics for throughput, failures, degraded outcomes, and stale-state usage.
-- Log stable identifiers such as `traceId`, `recommendationSetId`, snapshot IDs, or job IDs where the capability affects downstream recommendation behavior.
-- Publish structured reason codes so support, analytics, and audit tooling can bucket outcomes consistently.
+- Metrics:
+  - duplicate suppression rate (by reason code and surface)
+  - multi-anchor conflict rate
+  - anchor tie-break frequency
+  - degraded-after-dedupe rate
+  - suppression-to-empty-outfit rate
+- Logs/traces must include:
+  - `traceId`, `recommendationSetId`, `requestId`
+  - `policyVersion`
+  - winning anchor and tie-break key
+  - suppression actions and reason codes
+- Publish structured reason-code dimensions for analytics and support dashboards.
 
 ## 22. Example Scenarios
 
-### Scenario A: Typical happy-path execution
+### Scenario A: Cart dedupe with two anchor candidates
 
-1. A request or upstream change triggers `Cart Duplicate Suppression And Multi Anchor Handling`.
-2. The capability reads the required inputs, applies its policy, and emits the bounded output described above.
-3. Downstream systems consume the result with stable identifiers, version references, and reason codes.
+1. Cart contains a suit jacket and matching trousers; outfit candidate also includes those exact products.
+2. Module suppresses duplicate jacket/trouser recommendations.
+3. Anchor policy selects jacket as primary anchor due to category precedence.
+4. Suppressed slots are refilled with shirt/tie/shoes alternatives.
+5. Response returns valid grouped `outfit` with suppression and anchor decision records.
 
-### Illustrative payload
+### Scenario B: Occasion-led request with mixed cart anchors
+
+1. Request intent is wedding occasion; cart has casual shoes and formal blazer.
+2. Anchor policy prioritizes occasion-formality alignment over recency.
+3. Formal blazer wins as primary anchor.
+4. Casual-shoe anchor is retained only if compatible as optional slot member; otherwise suppressed with reason code.
+5. If required formal slots cannot be filled after suppression, output is marked `degraded` per policy.
+
+### Illustrative response payload
 
 ```json
 {
-  "subFeature": "cart-duplicate-suppression-and-multi-anchor-handling",
   "feature": "complete-look-orchestration",
-  "input": "cart or session contents",
-  "output": "duplicate-suppressed outfit assembly",
-  "traceId": "trace_example_001",
-  "recommendationSetId": "set_example_001"
+  "subFeature": "cart-duplicate-suppression-and-multi-anchor-handling",
+  "recommendationType": "outfit",
+  "requestId": "req_18377",
+  "traceId": "tr_98ab",
+  "recommendationSetId": "rs_2210",
+  "primaryAnchorDecision": {
+    "selectedAnchorProductId": "P-SUIT-001",
+    "reasonCode": "ANCHOR_SCORE_HIGHEST",
+    "tieBreaker": "CATEGORY_PRECEDENCE"
+  },
+  "suppressionRecords": [
+    {
+      "productId": "P-SUIT-001",
+      "slot": "anchor",
+      "action": "suppress",
+      "reasonCode": "ANCHOR_IN_CART_MISSION_PRESERVED"
+    }
+  ],
+  "degradedStatus": null
 }
 ```
 
 ## 23. Implementation Notes
 
-- Backend services should own the business logic and expose read-optimized contracts to downstream consumers.
-- Persist versioned records or snapshots rather than mutating the effective truth in place when the capability affects delivery or audit.
-- Use background jobs or stream consumers where the capability depends on ingestion, projections, or recomputation.
-- Prefer stable canonical IDs from `docs/project/data-standards.md` for products, customers, looks, rules, campaigns, experiments, and recommendation sets.
+- Implement as a deterministic post-processing stage in orchestration service, not in UI clients.
+- Keep duplicate matching and anchor scoring policy-driven and versioned.
+- Use canonical ID maps from `docs/project/data-standards.md` to avoid source-ID mismatches.
+- Persist suppression/anchor decisions in trace storage so replay and support paths can reconstruct output.
+- Prefer stateless request-time computation with projection reads; avoid mutating long-lived recommendation objects.
+- Keep UI responsibilities to rendering explanations; do not duplicate business logic client-side.
 
-Specific implementation implications for this capability:
+Implementation implications:
 
-- Backend services: add or extend a `cart-duplicate-suppression-and-multi-anchor-handling` service boundary under the `complete-look-orchestration` domain.
-- Database tables or documents: persist the primary entities listed in the data model with versioning and audit fields.
-- Jobs or workers: add asynchronous processing where ingestion, recomputation, replay, or batch delivery is part of the lifecycle.
-- External APIs: integrate only through the upstream systems explicitly referenced in the parent feature dependencies and inputs.
-- Frontend or shared UI: expose only the UI components and screens listed above; do not create duplicate surface-specific semantics.
+- **Backend service boundary:** `complete-look-orchestration` module containing:
+  - `dedupeEngine`
+  - `anchorResolver`
+  - `slotReconciler`
+- **Storage:** trace records for `DuplicateSuppressionRecord` and `PrimaryAnchorDecision`.
+- **Async support:** optional projection refresh workers for cart and anchor neighborhood views.
+- **External dependencies:** catalog, inventory, governance snapshot, delivery packaging.
 
 ## 24. Testing Requirements
 
-- Unit tests for state transitions, precedence rules, and reason-code assignment.
-- Contract tests for the capability's illustrative API shapes and event payloads.
-- Integration tests covering upstream dependency inputs and downstream consumer expectations.
-- Regression tests for degraded, empty, or blocked paths.
-- Traceability tests that verify stable identifiers and policy references propagate correctly.
+- **Unit tests**
+  - exact vs canonical vs near-duplicate classification
+  - deterministic anchor scoring and tie-break ordering
+  - reason-code assignment for every suppression action
+- **Contract tests**
+  - response includes `recommendationSetId`, `traceId`, `policyVersion`, and decision records
+  - event payloads carry required telemetry fields from `data-standards.md`
+- **Integration tests**
+  - cart update -> dedupe -> anchor resolve -> slot revalidation end-to-end
+  - governance and inventory snapshot changes affecting duplicate/anchor outcomes
+- **Regression tests**
+  - duplicate leakage (same item reappears after refresh)
+  - anchor flip-flop under identical input bundle
+  - degraded output when required slots cannot be recovered
+- **Performance tests**
+  - high cart-line count scenarios
+  - high candidate-anchor count scenarios
+- **Traceability tests**
+  - replay with same inputs and policy version yields same anchor and suppression outcomes
+  - operator override actions are logged and auditable
