@@ -4,205 +4,360 @@
 **Parent feature file:** `docs/features/complete-look-orchestration.md`  
 **Parent feature priority:** `P1`  
 **Sub-feature directory:** `docs/features/sub-features/complete-look-orchestration/`  
-**Upstream traceability:** `docs/features/complete-look-orchestration.md`; `docs/features/feature-spec-index.md`; `docs/project/business-requirements.md` (BR-001, BR-002, BR-005, BR-008); `docs/project/glossary.md` (`look` vs `outfit`); `docs/project/data-standards.md`; `docs/features/open-decisions.md` (`DEC-018`, `DEC-019`, `DEC-020`)  
+**Upstream traceability:** `docs/features/complete-look-orchestration.md`; `docs/features/feature-spec-index.md`; `docs/project/business-requirements.md` (BR-001, BR-002, BR-005, BR-008, BR-011); `docs/project/glossary.md` (`look` vs `outfit`); `docs/project/data-standards.md`; `docs/features/open-decisions.md` (`DEC-018`, `DEC-019`, `DEC-020`)  
 **Tracked open decisions:** `DEC-018`, `DEC-019`, `DEC-020`
 
 ---
 
 ## 1. Purpose
 
-Apply bounded omission or substitution logic when a full outfit cannot be assembled so the experience remains honest about degraded state without collapsing into an unrelated recommendation type.
+Control what happens when complete-look orchestration cannot fill every expected slot, and ensure the system returns an honest, policy-compliant `outfit` result (or suppresses it) rather than silently degrading into unrelated item recommendations.
 
-The goal of this capability is to give architecture, planning, UI, backend, analytics, and governance work a bounded implementation module instead of leaving this behavior implicit inside the broader feature file.
+This module exists to keep fallback behavior deterministic, explainable, and reusable across PDP, cart, and later surfaces.
 
 ## 2. Core Concept
 
-This capability sits under `Complete-look orchestration` and owns one clear responsibility: apply bounded omission or substitution logic when a full outfit cannot be assembled so the experience remains honest about degraded state without collapsing into an unrelated recommendation type.
+`Degraded Outfit Fallback Controller` runs after initial slot assignment and validation. It decides whether to:
 
-It should be implemented as a reusable platform module whose contracts remain consistent across channels and environments rather than as surface-specific one-off logic.
+1. keep the assembled outfit as-is,
+2. repair it with bounded substitutions,
+3. drop only allowed optional slots,
+4. emit a degraded-but-valid outfit, or
+5. suppress the outfit set if minimum viability is not met.
+
+The controller is policy-driven and trace-first. It never changes recommendation type: output remains `outfit` or explicit suppression.
 
 ## 3. User Problems Solved
 
-- Reduces ambiguity for teams implementing `Complete-look orchestration` by isolating a single capability boundary.
-- Prevents downstream consumers from reinterpreting `Degraded Outfit Fallback Controller` behavior differently on each surface or channel.
-- Keeps cross-cutting uncertainty explicit through open-decision references instead of forcing later stages to guess.
+- Prevents customer-facing modules from showing misleading "complete look" content when required items are missing.
+- Gives merchandising and support teams machine-readable reasons for degraded or suppressed outcomes.
+- Reduces channel drift by centralizing fallback semantics in one module rather than per-surface custom logic.
+- Protects measurement quality by emitting explicit degraded-state metadata and reason codes.
 
 ## 4. Trigger Conditions
 
-- Required slots cannot be filled after validation.
-- Inventory or governance changes invalidate members late in the flow.
-- A surface allows a smaller but still coherent degraded outfit response.
+The controller executes when any of the following occurs:
+
+- one or more required slots are unfilled after template selection and slot fill,
+- a filled member fails governance or inventory checks during final validation,
+- duplicate suppression removes a required slot candidate in cart flows,
+- mode/surface constraints (RTW vs CM, PDP vs cart) invalidate current slot coverage,
+- post-assembly freshness checks mark one or more members unavailable.
 
 ## 5. Inputs
 
-- validated outfit assembly
-- slot coverage rules
-- surface-specific degraded-state policy
-- available backup candidates
-- reason codes from earlier validation stages
+| Input | Required | Notes |
+| --- | --- | --- |
+| `assemblyPlan` | Yes | Slot-labeled grouped assembly candidate from orchestration. |
+| `slotPolicy` | Yes | Required vs optional slot definitions by surface/mode. |
+| `fallbackPolicy` | Yes | Ordered fallback actions and suppress thresholds. |
+| `validationFindings[]` | Yes | Hard-rule failures and reason codes from validator. |
+| `backupCandidatesBySlot` | Optional | Ranked substitutes per slot from decisioning/catalog projections. |
+| `surfaceContext` | Yes | `surface`, `placement`, `market`, `mode`, campaign/experiment refs. |
+| `anchorContext` | Conditional | Required for anchor-led paths (PDP/cart). |
+| `traceContext` | Yes | `traceId`, `recommendationSetId`, policy versions, timestamps. |
 
 ## 6. Outputs
 
-- degraded outfit response plan
-- slot omissions or substitutions with explanation codes
-- blocked verdict when the minimum viable outfit is not met
-- delivery-facing degraded-state metadata
+| Output | Description |
+| --- | --- |
+| `fallbackDecision` | `valid`, `degraded`, or `suppressed`. |
+| `resolvedAssemblyPlan` | Final grouped outfit payload if not suppressed. |
+| `slotResolution[]` | Per-slot action: `kept`, `substituted`, `omitted`, `unresolved`. |
+| `degradationSummary` | Machine-readable degradation code set and customer-safe message key. |
+| `fallbackTrace` | Ordered decisions, candidate counts, policy references, and reason lineage. |
+| `deliveryHints` | UI-safe flags (for example, show degraded badge, hide optional section). |
 
 ## 7. Workflow / Lifecycle
 
-1. Evaluate whether the current outfit still meets the minimum viable grouped answer for the request.
-2. Attempt bounded substitutions or omissions according to policy.
-3. Classify the final state as valid, degraded, or suppressed.
-4. Attach user-safe explanation text and machine-readable degraded-state codes.
-5. Return the final grouped payload to delivery packaging.
+1. **Receive candidate assembly** after initial validation (`candidate_validated`).
+2. **Detect gaps/failures** by slot (`gap_detected`).
+3. **Build fallback plan** using policy precedence (`fallback_plan_built`).
+4. **Apply bounded actions** in sequence: substitute required slots, omit optional slots, re-evaluate viability (`fallback_applied`).
+5. **Revalidate outcome** against hard constraints (`fallback_revalidated`).
+6. **Classify result** as `valid`, `degraded`, or `suppressed` (`fallback_classified`).
+7. **Emit payload + trace metadata** to delivery and analytics (`fallback_emitted`).
+
+`degraded` is a successful response state with constrained quality, not a processing failure.
 
 ## 8. Business Rules
 
-- Internal look semantics and customer-facing outfit semantics must remain distinct and explicitly labeled.
-- A degraded outfit must still read as a coherent complete-look answer, not a flat list of adjacent items.
-- Anchor preservation and slot completeness rules may vary by surface or mode, but they must be policy-driven and traceable.
-- This capability must stay aligned with `docs/features/complete-look-orchestration.md` as the feature-stage source of truth.
-- Open decisions must remain explicit and must not be silently resolved in this spec: `DEC-018`, `DEC-019`, `DEC-020`.
-- Internal `look` semantics and customer-facing `outfit` semantics must remain distinct where grouped recommendation meaning matters.
+- Recommendation type must remain `outfit`; fallback cannot auto-convert to cross-sell or upsell sets.
+- Required vs optional slot definitions come only from versioned policy/config, not hardcoded surface logic.
+- Anchor slot is immutable for anchor-led requests unless request mode explicitly changes.
+- Optional slots may be omitted before required slots are substituted.
+- Required slot omission is allowed only if current `fallbackPolicy` explicitly allows a degraded minimum that remains a credible outfit.
+- If minimum viable outfit criteria are not satisfied, controller must return `suppressed` with explicit reason codes.
+- Customer-safe explanation text must be abstracted via message keys; no sensitive rule or profile reasoning in consumer payloads.
+- All fallback decisions must include `traceId`, `recommendationSetId`, and policy version references.
+- Open decisions remain unresolved here and must be honored as policy inputs:
+  - `DEC-018`: required vs optional slot composition by anchor/surface/mode,
+  - `DEC-019`: substitution vs omission policy and suppress threshold,
+  - `DEC-020`: primary anchor rules in multi-anchor contexts.
 
 ## 9. Configuration Model
 
-- `enabled` flag to turn the capability on or off per environment.
-- `policyVersion` reference so behavior stays traceable across changes.
-- `market`, `channel`, `surface`, and `mode` scoping keys where applicable.
+### Core config groups
 
-## 10. Data Model
+- `fallbackPolicy` - action precedence and suppression thresholds.
+- `slotCriticalityPolicy` - required/optional slot classification per template and surface.
+- `surfaceFallbackPolicy` - PDP/cart/other surface behavior and messaging keys.
+- `modeFallbackPolicy` - RTW vs CM allowances.
+- `reasonCodePolicy` - standard code taxonomy and consumer-safe mapping.
 
-Primary entities:
-
-- OutfitFallbackPlan
-- SlotOmissionRecord
-- SubstitutedMemberRecord
-- MinimumViableOutfitRule
-- DegradedOutfitState
-
-Recommended shared fields across the entities above:
-
-- stable canonical IDs and source references where applicable
-- createdAt / updatedAt timestamps
-- policy or schema version references
-- traceable reason codes for degraded, blocked, or overridden outcomes
-
-## 11. API Endpoints
-
-Illustrative feature-stage endpoints and operations:
-
-- POST /outfits/fallback
-- POST /outfits/retry-substitution
-
-These endpoints are intentionally illustrative. Final transport, schema normalization, and versioning details should follow the eventual architecture-stage resolution of the relevant `DEC-###` items.
-
-## 12. Events Produced
-
-- outfit.degraded
-- outfit.suppressed
-
-## 13. Events Consumed
-
-- outfit.validation.blocked
-- inventory.surface.gated
-- governance.override.published
-
-## 14. Integrations
-
-- catalog and product intelligence
-- shared contracts and delivery API
-- recommendation decisioning and ranking
-- merchandising governance and operator controls
-- analytics and experimentation
-- explainability and auditability
-- RTW and CM mode support
-
-## 15. UI Components
-
-- outfit slot cards
-- grouped look preview panels
-- assembly validation badges
-- substitution explanation chips
-
-If the capability is primarily backend-oriented, these components still matter for operator, support, or diagnostics surfaces that need to expose its state safely.
-
-## 16. UI Screens
-
-- operator outfit preview screen
-- support assembly trace detail
-- merchandising look validation screen
-
-## 17. Permissions & Security
-
-- Restrict write operations to the service or operator role responsible for the capability.
-- Expose only role-safe fields to support, operator, and consumer views.
-- Keep audit fields on every state change that affects downstream recommendation behavior.
-
-## 18. Error Handling
-
-- Reject malformed requests or invalid references with structured validation errors and reason codes.
-- Distinguish degraded or partial success from hard failure whenever the capability can still produce a safe output.
-- Preserve traceability for failures so support and analytics can correlate them later.
-
-## 19. Edge Cases
-
-- Out-of-order upstream updates arrive and must not regress the effective state.
-- A downstream consumer uses an older snapshot or contract version while the capability advances.
-- Open decisions or policy changes alter behavior between stages and must remain traceable.
-
-## 20. Performance Considerations
-
-- Prefer projection-backed reads for request-time paths instead of recomputing from raw history.
-- Keep payloads, indexes, and cache invalidation aligned with the surfaces that consume the capability.
-- Track degraded-state rates so performance shortcuts do not silently erode recommendation quality.
-
-## 21. Observability
-
-- Emit metrics for throughput, failures, degraded outcomes, and stale-state usage.
-- Log stable identifiers such as `traceId`, `recommendationSetId`, snapshot IDs, or job IDs where the capability affects downstream recommendation behavior.
-- Publish structured reason codes so support, analytics, and audit tooling can bucket outcomes consistently.
-
-## 22. Example Scenarios
-
-### Scenario A: Typical happy-path execution
-
-1. A request or upstream change triggers `Degraded Outfit Fallback Controller`.
-2. The capability reads the required inputs, applies its policy, and emits the bounded output described above.
-3. Downstream systems consume the result with stable identifiers, version references, and reason codes.
-
-### Illustrative payload
+### Example configuration shape (illustrative)
 
 ```json
 {
-  "subFeature": "degraded-outfit-fallback-controller",
-  "feature": "complete-look-orchestration",
-  "input": "validated outfit assembly",
-  "output": "degraded outfit response plan",
-  "traceId": "trace_example_001",
-  "recommendationSetId": "set_example_001"
+  "policyVersion": "fallback-v3",
+  "surface": "pdp",
+  "mode": "rtw",
+  "actionOrder": ["substitute_required", "omit_optional", "suppress_if_below_minimum"],
+  "minimumViable": {
+    "mustIncludeSlots": ["anchor", "shirt", "shoes"],
+    "allowOptionalOmission": true
+  },
+  "reasonCodePolicy": {
+    "inventory_gap": "INV_GAP",
+    "governance_block": "GOV_BLOCK",
+    "template_gap": "TPL_GAP"
+  }
+}
+```
+
+## 10. Data Model
+
+| Entity | Purpose | Required fields |
+| --- | --- | --- |
+| `OutfitFallbackPlan` | Decision plan for current assembly | `planId`, `traceId`, `policyVersion`, `inputAssemblyId`, `decisionState` |
+| `SlotResolution` | Per-slot outcome after fallback | `slotName`, `action`, `fromProductId`, `toProductId`, `reasonCodes[]` |
+| `DegradationSummary` | Aggregate explanation of degraded result | `degradationLevel`, `degradationCodes[]`, `customerMessageKey` |
+| `FallbackAuditRecord` | Persisted operator/support replay record | `recommendationSetId`, `traceId`, `policyRefs`, `candidateCounts`, timestamps |
+| `SuppressionRecord` | Explicit no-delivery result | `suppressionCode`, `blockingSlots[]`, `surface`, `mode`, `market` |
+
+Use canonical IDs and source references from `docs/project/data-standards.md`.
+
+## 11. API Endpoints
+
+Illustrative internal endpoints:
+
+- `POST /internal/outfit-fallback/evaluate`
+  - Input: `assemblyPlan`, `validationFindings`, `policyContext`.
+  - Output: `fallbackDecision`, `resolvedAssemblyPlan`, trace fields.
+- `POST /internal/outfit-fallback/replay`
+  - Input: `traceId` or `recommendationSetId` + historical policy version.
+  - Output: deterministic replay decision for support/audit.
+- `GET /internal/outfit-fallback/policies/{policyVersion}`
+  - Read-only policy inspection for operator/debug tooling.
+
+Transport and envelope details remain architecture-stage decisions.
+
+## 12. Events Produced
+
+- `outfit.fallback.applied`
+- `outfit.fallback.degraded`
+- `outfit.fallback.suppressed`
+- `outfit.fallback.replay.completed`
+
+Minimum event fields:
+
+- `eventId`, `occurredAt`, `traceId`, `recommendationSetId`,
+- `surface`, `mode`, `market`, `policyVersion`,
+- `decisionState`, `degradationCodes[]`, `slotResolution[]`.
+
+## 13. Events Consumed
+
+- `outfit.validation.blocked`
+- `outfit.validation.partial`
+- `catalog.inventory.changed`
+- `governance.snapshot.published`
+- `outfit.anchor.resolved` (for anchor context in multi-anchor/cart flows)
+
+## 14. Integrations
+
+- **Template selection and slot filling**: receives initial slot coverage and candidate pool lineage.
+- **Governance and inventory validation**: consumes hard-rule failures and freshness constraints.
+- **Internal assemble contract and trace emission**: forwards final fallback-classified payload and metadata.
+- **Shared contracts and delivery API**: ensures output is packaged as `outfit` or explicit suppression.
+- **Analytics and experimentation**: emits reason-coded degraded/suppressed telemetry.
+- **Explainability and auditability**: persists policy/decision lineage for operator replay.
+
+## 15. UI Components
+
+Consumer components (surface teams):
+
+- grouped outfit card with optional degraded-state indicator,
+- slot-level missing/substituted presentation hooks,
+- optional slot section that can collapse when omitted.
+
+Operator/support components:
+
+- fallback timeline panel (decision steps),
+- slot resolution diff table (`from` -> `to`),
+- reason-code chips with policy version badges.
+
+## 16. UI Screens
+
+- **PDP complete-look module**: supports degraded-but-valid rendering without misleading "full look" claims.
+- **Cart complete-the-look module**: highlights duplicate-aware substitutions and suppressed outcomes cleanly.
+- **Merchandising review screen**: filters repeated degradation patterns by anchor class and market.
+- **Support trace screen**: replay and inspect fallback decisions by `traceId` or `recommendationSetId`.
+
+## 17. Permissions & Security
+
+- Only orchestration services may execute fallback write decisions in production paths.
+- Operator replay endpoints are read-only and role-gated.
+- Consumer payloads must not expose sensitive profile/governance rationale.
+- Trace access should be scoped by role and audited (read and replay actions).
+- Persisted fallback records must follow platform retention and redaction policies.
+
+## 18. Error Handling
+
+Error classes:
+
+- `FALLBACK_INPUT_INVALID` - malformed or incomplete input payload.
+- `POLICY_NOT_FOUND` - missing policy version for request scope.
+- `FALLBACK_REVALIDATION_FAILED` - fallback outcome still violates hard constraints.
+- `TRACE_WRITE_FAILED` - decision computed but trace persistence failed.
+
+Handling requirements:
+
+- distinguish computation errors from valid `suppressed` outcomes,
+- return deterministic reason codes for all non-success paths,
+- fail closed to suppression (not unsafe delivery) when hard constraints cannot be evaluated.
+
+## 19. Edge Cases
+
+- **Anchor unavailable after late inventory change**: required anchor becomes unsellable between fill and delivery.
+- **No substitute for required slot**: candidate pool exhausted after governance blocks.
+- **Conflicting policy snapshots**: policy version mismatch between validator and fallback controller.
+- **Cart multi-anchor ambiguity**: fallback receives competing anchor candidates and must respect resolved primary anchor.
+- **CM mode boundaries**: request context asks for CM depth not allowed in self-serve path.
+- **Duplicate reintroduction**: substitution candidate would re-add in-cart duplicate.
+
+## 20. Performance Considerations
+
+- Keep fallback evaluation in the interactive serving path budget for PDP/cart.
+- Prefer projection-backed backup candidate reads (avoid full recomputation at request time).
+- Use bounded substitution search depth per slot to avoid latency spikes.
+- Cache policy snapshots by `policyVersion` + scope (`surface`, `market`, `mode`).
+- Emit lightweight decision traces synchronously; heavy analytics enrichment can be async.
+
+## 21. Observability
+
+Required metrics:
+
+- fallback invocation count by surface/mode,
+- degraded rate and suppressed rate,
+- top degradation reason codes,
+- average required-slot substitution attempts,
+- replay volume and replay mismatch rate.
+
+Required logs/traces:
+
+- `traceId`, `recommendationSetId`, policy versions, slot-resolution summary,
+- deterministic decision path (`actionOrder` and first successful action),
+- linkage to upstream validation and downstream delivery events.
+
+Alert examples:
+
+- sudden suppression spike for a major anchor class,
+- policy-not-found errors above threshold,
+- sustained increase in `inventory_gap` degradation codes.
+
+## 22. Example Scenarios
+
+### Scenario A: PDP suit anchor, optional slot omission
+
+1. Suit-led outfit is assembled with `anchor`, `shirt`, `tie`, `shoes`, optional `belt`.
+2. `belt` fails inventory freshness check.
+3. Policy allows optional omission; controller removes `belt`, marks `degraded`.
+4. Output remains a valid `outfit` with degradation code `INV_GAP_OPTIONAL`.
+
+### Scenario B: Cart flow, required shirt substitution
+
+1. Cart-based outfit has valid anchor and shoes; shirt becomes governance-blocked.
+2. Controller finds next ranked shirt candidate that passes rules.
+3. Slot action: `substituted`; result classified `degraded`.
+4. Trace includes old/new product IDs and governance reason lineage.
+
+### Scenario C: No viable required-slot recovery
+
+1. Anchor is valid, but both required `shirt` and `shoes` cannot be filled.
+2. Policy minimum viable criteria are not met.
+3. Controller emits `suppressed` with `blockingSlots = ["shirt","shoes"]`.
+4. Delivery receives explicit suppression state, not a flat item list.
+
+### Illustrative response payload
+
+```json
+{
+  "fallbackDecision": "degraded",
+  "traceId": "TR-12345",
+  "recommendationSetId": "RS-9001",
+  "policyVersion": "fallback-v3",
+  "slotResolution": [
+    { "slotName": "anchor", "action": "kept", "reasonCodes": [] },
+    { "slotName": "shirt", "action": "substituted", "fromProductId": "P-210", "toProductId": "P-212", "reasonCodes": ["GOV_BLOCK"] },
+    { "slotName": "belt", "action": "omitted", "reasonCodes": ["INV_GAP"] }
+  ],
+  "degradationSummary": {
+    "degradationLevel": "partial",
+    "degradationCodes": ["GOV_BLOCK_REQUIRED_RECOVERED", "INV_GAP_OPTIONAL"],
+    "customerMessageKey": "outfit.partial_availability"
+  }
 }
 ```
 
 ## 23. Implementation Notes
 
-- Backend services should own the business logic and expose read-optimized contracts to downstream consumers.
-- Persist versioned records or snapshots rather than mutating the effective truth in place when the capability affects delivery or audit.
-- Use background jobs or stream consumers where the capability depends on ingestion, projections, or recomputation.
-- Prefer stable canonical IDs from `docs/project/data-standards.md` for products, customers, looks, rules, campaigns, experiments, and recommendation sets.
+### Backend/service implications
 
-Specific implementation implications for this capability:
+- Implement as a distinct module in complete-look orchestration pipeline, called after validation and before delivery packaging.
+- Keep deterministic rule execution order via policy (`actionOrder`) to support replay and incident triage.
+- Persist fallback decisions in an audit-friendly store keyed by `recommendationSetId` and `traceId`.
 
-- Backend services: add or extend a `degraded-outfit-fallback-controller` service boundary under the `complete-look-orchestration` domain.
-- Database tables or documents: persist the primary entities listed in the data model with versioning and audit fields.
-- Jobs or workers: add asynchronous processing where ingestion, recomputation, replay, or batch delivery is part of the lifecycle.
-- External APIs: integrate only through the upstream systems explicitly referenced in the parent feature dependencies and inputs.
-- Frontend or shared UI: expose only the UI components and screens listed above; do not create duplicate surface-specific semantics.
+### Data/storage implications
+
+- Store per-request fallback record plus compact per-slot resolution records.
+- Partition by event date and surface for operational analytics.
+- Keep policy snapshot reference, not policy body duplication, where possible.
+
+### Worker/async implications
+
+- Synchronous path computes decision for serving.
+- Async worker enriches analytics aggregates (reason-code trend tables, hot-anchor suppression monitors).
+
+### Cross-module alignment
+
+- Do not duplicate validation logic from governance/inventory validator.
+- Do not mutate ranking logic; consume ranked backup candidates as inputs.
+- Preserve shared contract semantics from `shared-contracts-and-delivery-api`.
 
 ## 24. Testing Requirements
 
-- Unit tests for state transitions, precedence rules, and reason-code assignment.
-- Contract tests for the capability's illustrative API shapes and event payloads.
-- Integration tests covering upstream dependency inputs and downstream consumer expectations.
-- Regression tests for degraded, empty, or blocked paths.
-- Traceability tests that verify stable identifiers and policy references propagate correctly.
+Minimum test suite:
+
+- **Unit tests**
+  - action precedence (substitute before omit, suppress threshold behavior),
+  - reason-code mapping and message-key mapping,
+  - deterministic replay for identical inputs and policy version.
+- **Contract tests**
+  - `fallbackDecision` envelope and slot-resolution schema,
+  - event payload fields for degraded/suppressed states.
+- **Integration tests**
+  - validator -> fallback -> delivery pipeline behavior,
+  - cross-surface policy scoping (`pdp`, `cart`, RTW/CM hooks),
+  - duplicate suppression interactions in cart flows.
+- **Regression tests**
+  - known degraded fixtures for top anchor classes,
+  - suppression behavior when minimum viability is not met.
+- **Observability tests**
+  - metrics emitted for degraded/suppressed outcomes,
+  - trace linkage (`traceId`, `recommendationSetId`) preserved through outcome events.
+
+Exit criteria for this capability in implementation planning:
+
+- no silent downgrade from `outfit` semantics,
+- all degraded/suppressed outcomes carry reason codes and trace linkage,
+- replay endpoint reproduces classification for fixed input + policy version.
